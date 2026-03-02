@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lesson 1: The Heart of a Champion | 官方語音評量系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lesson 1: The Heart of a Champion | 進階語音評量</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -18,6 +18,7 @@
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #f8fafc;
             color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .academic-header {
@@ -26,22 +27,26 @@
 
         .english-quote {
             font-family: 'Libre Baskerville', serif;
-            line-height: 2.2;
+            line-height: 1.8;
+            word-spacing: 0.1em;
         }
 
         .word-span {
             display: inline-block;
-            margin: 0 4px;
-            padding: 2px 6px;
-            border-radius: 6px;
-            transition: all 0.4s ease;
-            border-bottom: 3px solid transparent;
+            margin: 1px 2px;
+            padding: 1px 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        @media (min-width: 768px) {
+            .word-span { font-size: 1.75rem; }
         }
 
         .word-matched {
             color: #059669;
             background-color: #ecfdf5;
-            border-bottom-color: #10b981;
             font-weight: 700;
         }
 
@@ -50,20 +55,13 @@
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.98);
-            border: 1px solid rgba(226, 232, 240, 1);
+            background: white;
+            border: 1px solid #e2e8f0;
         }
 
         .btn-gold {
             background: var(--accent-gold);
             color: white;
-            transition: all 0.3s;
-        }
-
-        .btn-gold:hover {
-            filter: brightness(1.1);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(212, 175, 55, 0.4);
         }
 
         .recording-active {
@@ -73,242 +71,139 @@
 
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
+        .quiz-item {
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 2rem;
+        }
+        .quiz-item:last-child {
+            border-bottom: none;
+        }
         .quiz-option {
-            transition: all 0.2s ease;
-            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            padding: 1rem;
+            border-radius: 0.75rem;
             border: 2px solid #f1f5f9;
-            font-size: 1.05rem;
+            background: white;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            display: block;
+            margin-bottom: 0.5rem;
         }
-        .quiz-option:hover:not(:disabled) {
-            border-color: var(--accent-gold);
-            background-color: #fffaf0;
-        }
-        .quiz-question {
-            font-size: 1.15rem;
-            line-height: 1.6;
-            color: #334155;
+        .quiz-option:active {
+            transform: scale(0.98);
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen pb-10">
 
-    <!-- Top Branding -->
-    <nav class="academic-header text-white py-5 px-6 shadow-lg">
+    <nav class="academic-header text-white py-4 px-4 shadow-md sticky top-0 z-50">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-graduation-cap text-3xl text-[#d4af37]"></i>
-                <div class="flex flex-col">
-                    <span class="font-bold tracking-[0.2em] text-lg uppercase">English Lab</span>
-                    <span class="text-[10px] text-slate-400 tracking-widest uppercase">Professional Assessment</span>
-                </div>
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-graduation-cap text-xl text-[#d4af37]"></i>
+                <span class="font-bold tracking-wider text-sm">L1 REVIEW</span>
             </div>
-            <div class="flex items-center gap-4">
-                <div id="status-display" class="flex items-center gap-2 bg-slate-800/50 px-4 py-1.5 rounded-full border border-slate-700">
-                    <div class="w-2 h-2 rounded-full bg-slate-400" id="status-dot"></div>
-                    <span class="text-[10px] font-bold uppercase tracking-widest" id="status-text">Standby</span>
-                </div>
+            <div id="status-display" class="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+                <div class="w-2 h-2 rounded-full bg-slate-400" id="status-dot"></div>
+                <span class="text-[10px] font-bold uppercase" id="status-text">Standby</span>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto px-4 py-12">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            
-            <!-- Left Side (Main Workflow) -->
-            <div class="lg:col-span-8 space-y-10">
-                
-                <!-- 1. 語音測驗核心卡片 -->
-                <section class="glass-card rounded-[2.5rem] p-10 shadow-xl border-t-4 border-t-[#d4af37]">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                        <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                            <span class="bg-slate-100 text-slate-400 w-10 h-10 rounded-xl flex items-center justify-center text-sm italic">01</span>
-                            Oral Reading
-                        </h2>
-                        
-                        <div class="flex items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200 gap-2">
-                            <button id="play-pause-btn" onclick="toggleDemo()" class="w-10 h-10 bg-white rounded-xl shadow-sm hover:bg-blue-50 text-blue-600 transition-all flex items-center justify-center">
-                                <i class="fa-solid fa-play" id="audio-icon"></i>
-                            </button>
-                            <div class="px-2">
-                                <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-tighter">Model Audio</span>
-                                <span id="audio-status" class="text-xs font-bold text-slate-600 italic">Ready</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-50 rounded-[2rem] p-10 border border-slate-100 mb-10 shadow-inner">
-                        <div id="word-container" class="english-quote text-2xl md:text-3xl text-center">
-                            <!-- Words dynamic inject -->
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col items-center gap-4">
-                        <button id="record-ctrl-btn" onclick="toggleTest()" class="btn-gold px-12 py-5 rounded-2xl font-black text-lg flex items-center gap-4 shadow-xl active:scale-95">
-                            <i class="fa-solid fa-microphone-lines" id="btn-icon"></i>
-                            <span id="btn-text">開始評量測驗</span>
-                        </button>
-                        <p id="live-transcript" class="text-slate-400 text-sm italic font-medium tracking-wide h-6"></p>
-                    </div>
-                </section>
-
-                <!-- 2. AI 評分報告 (原本在右邊，現在移到中間) -->
-                <section id="score-report" class="hidden glass-card rounded-[2.5rem] p-10 shadow-xl border-l-8 border-l-blue-600 animate-in slide-in-from-bottom duration-700">
-                    <h3 class="text-2xl font-black mb-8 text-slate-800 flex items-center gap-3">
-                        <i class="fa-solid fa-chart-bar text-blue-600"></i>
-                        評分分析報告
-                    </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                        <!-- Score Circle -->
-                        <div class="text-center relative">
-                            <svg class="w-40 h-40 mx-auto" viewBox="0 0 36 36">
-                                <path class="stroke-slate-100" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path id="progress-circle" class="stroke-blue-600 transition-all duration-1000" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <div class="text-4xl font-black text-slate-800" id="final-score">0%</div>
-                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Accuracy</div>
-                            </div>
-                        </div>
-
-                        <!-- Bar Stats -->
-                        <div class="space-y-6">
-                            <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100">
-                                <div class="flex justify-between items-end mb-1">
-                                    <span class="text-[10px] font-bold text-emerald-600 uppercase">Fluency</span>
-                                    <span id="fluency-val" class="text-xl font-black text-emerald-800 italic">0%</span>
-                                </div>
-                                <div class="w-full bg-emerald-200/30 h-1.5 rounded-full overflow-hidden">
-                                    <div id="fluency-bar" class="bg-emerald-500 h-full w-0 transition-all duration-1000"></div>
-                                </div>
-                            </div>
-                            <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100">
-                                <div class="flex justify-between items-end mb-1">
-                                    <span class="text-[10px] font-bold text-blue-600 uppercase">Precision</span>
-                                    <span id="precision-val" class="text-xl font-black text-blue-800 italic">0%</span>
-                                </div>
-                                <div class="w-full bg-blue-200/30 h-1.5 rounded-full overflow-hidden">
-                                    <div id="precision-bar" class="bg-blue-500 h-full w-0 transition-all duration-1000"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- AI Suggestions -->
-                        <div class="p-6 bg-slate-900 rounded-3xl text-white">
-                            <h4 class="text-xs font-bold text-[#d4af37] uppercase mb-4 tracking-widest">AI 發音建議</h4>
-                            <ul id="feedback-list" class="text-sm space-y-3 leading-relaxed opacity-90 list-none">
-                                <!-- AI Feedback dynamic -->
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- 3. 文學理解挑戰 -->
-                <section class="glass-card rounded-[2.5rem] p-10 shadow-lg">
-                    <div class="mb-10">
-                        <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3 mb-2">
-                            <span class="bg-slate-100 text-slate-400 w-10 h-10 rounded-xl flex items-center justify-center text-sm italic">02</span>
-                            Comprehension Quiz
-                        </h2>
-                        <div class="h-1 w-20 bg-[#d4af37] rounded-full"></div>
-                    </div>
-                    
-                    <div class="space-y-12" id="quiz-stack">
-                        <!-- Questions dynamic inject -->
-                    </div>
-                </section>
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        
+        <!-- 01. 朗讀測驗 -->
+        <section class="glass-card rounded-3xl p-6 shadow-sm mb-6 border-b-4 border-b-[#d4af37]">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                    <span class="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center text-xs">01</span>
+                    Oral Reading Task
+                </h2>
+                <button id="play-pause-btn" onclick="toggleDemo()" class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl text-blue-600 font-bold text-xs">
+                    <i class="fa-solid fa-play" id="audio-icon"></i>
+                    <span id="audio-label">聽示範</span>
+                </button>
             </div>
 
-            <!-- Right Side (Summary & Status) -->
-            <div class="lg:col-span-4">
-                <section class="glass-card rounded-[2.5rem] p-8 shadow-lg sticky top-8">
-                    <h3 class="text-xl font-bold mb-6 text-slate-800 border-b border-slate-100 pb-4">學習概況</h3>
-                    
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
-                                <i class="fa-solid fa-book-open"></i>
-                            </div>
-                            <div>
-                                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Current Unit</p>
-                                <p class="font-bold text-slate-700">L1: Heart of a Champion</p>
-                            </div>
-                        </div>
+            <div class="bg-slate-50 rounded-2xl p-5 md:p-8 border border-slate-100 mb-6">
+                <div id="word-container" class="english-quote text-left text-slate-700">
+                    <!-- Words injected here -->
+                </div>
+            </div>
 
-                        <div id="waiting-status" class="p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 text-center py-12">
-                            <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-300 mb-3 block"></i>
-                            <p class="text-slate-400 text-sm italic">完成上方朗讀測驗後<br>系統將解鎖進階分析報告</p>
-                        </div>
+            <div class="flex flex-col items-center gap-4">
+                <div id="mic-error-msg" class="hidden text-xs text-red-500 font-bold bg-red-50 p-3 rounded-xl text-center w-full">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> 請檢查麥克風權限 (需 HTTPS 且點擊允許)
+                </div>
+                <button id="record-ctrl-btn" onclick="toggleTest()" class="btn-gold w-full md:w-auto px-8 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md active:scale-95 transition-all">
+                    <i class="fa-solid fa-microphone" id="btn-icon"></i>
+                    <span id="btn-text">開始語音辨識</span>
+                </button>
+                <div id="live-transcript" class="text-slate-400 text-xs italic font-medium h-4 overflow-hidden text-center w-full"></div>
+            </div>
+        </section>
 
-                        <div id="completed-status" class="hidden p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
-                            <div class="flex items-center gap-2 text-emerald-600 font-bold mb-2">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span>測驗完成</span>
-                            </div>
-                            <p class="text-xs text-emerald-800 leading-relaxed">您的發音記錄已上傳，請根據下方的 AI 建議進行加強練習。</p>
+        <!-- 分析報告 -->
+        <div id="score-report-container">
+            <section id="score-report" class="hidden glass-card rounded-3xl p-6 shadow-md border-l-8 border-l-blue-600 mb-6 animate-in slide-in-from-bottom duration-500">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">口說分析報告</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    <div class="text-center relative py-2">
+                        <svg class="w-28 h-28 mx-auto transform -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
+                            <circle id="progress-circle" cx="18" cy="18" r="16" fill="none" class="stroke-blue-600 transition-all duration-1000" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                            <div class="text-2xl font-black text-slate-800" id="final-score">0%</div>
+                            <div class="text-[8px] font-bold text-slate-400 uppercase">Success</div>
                         </div>
                     </div>
-                </section>
-            </div>
+                    <div class="space-y-3">
+                        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-emerald-600 uppercase">Fluency 流暢度</span>
+                            <span id="fluency-val" class="font-black text-emerald-800 italic">0%</span>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-blue-600 uppercase">Accuracy 準確度</span>
+                            <span id="precision-val" class="font-black text-blue-800 italic">0%</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-slate-900 rounded-2xl text-white h-full">
+                        <h4 class="text-[10px] font-bold text-[#d4af37] uppercase mb-2">AI Feedback</h4>
+                        <ul id="feedback-list" class="text-[11px] space-y-1 opacity-90 leading-relaxed list-disc pl-3">
+                        </ul>
+                    </div>
+                </div>
+            </section>
         </div>
+
+        <!-- 02. 文學理解挑戰 (恢復正確題目版) -->
+        <section class="glass-card rounded-3xl p-6 shadow-md">
+            <div class="mb-8">
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2 mb-1">
+                    <span class="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center text-xs">02</span>
+                    Reading Comprehension
+                </h2>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider ml-9 italic">請根據課文細節選擇最正確的選項</p>
+            </div>
+            
+            <div class="space-y-10" id="quiz-stack">
+                <!-- 題目由 JS 動態生成 -->
+            </div>
+        </section>
     </main>
 
     <script>
         const targetText = "Suddenly, he feels a sharp pain in his leg. The pain is unbearable, and he grabs his powerless limb in horror. Immediately, he realizes what has happened: his right hamstring is completely torn. All eyes in the crowd are on him, watching him collapse to the ground in pain.";
-        
-        const quizData = [
-            {
-                q: "The author uses short fragments like 'One hundred meters. ... One hundred and fifty meters.' What is the primary purpose?",
-                options: ["(A) To save space and make the story shorter.", "(B) To create suspense and mimic the rhythm of the race.", "(C) To show Derek was moving slowly at the beginning.", "(D) To focus on distance rather than Derek's emotions."],
-                ans: 1,
-                reason: "短句能模仿跑步時急促的呼吸聲與緊張的心跳節奏，將讀者拉進比賽現場。"
-            },
-            {
-                q: "What does the repetition of 'Somehow' emphasize in the text?",
-                options: ["(A) The physical technique Derek used.", "(B) The doubt the author had about Derek.", "(C) The mysterious and incredible nature of determination.", "(D) The fact that Derek was lost on the track."],
-                ans: 2,
-                reason: "重複 'Somehow' 強調了這種意志力幾乎是超乎常理、令人驚嘆且難以解釋的，增加文章的文學張力。"
-            },
-            {
-                q: "What does the 'Heart of a Champion' refer to at the end of the text?",
-                options: ["(A) Physical health of an athlete's heart.", "(B) Winning a gold medal regardless of the cost.", "(C) The speed of recovery from injury.", "(D) Inner strength to finish despite failure or pain."],
-                ans: 3,
-                reason: "這是本課主旨：真正的冠軍不在於獎牌，而在於面對失敗時仍選擇完成旅程的內在力量。"
-            },
-            {
-                q: "In the later part of the story, Derek's father joined him. What did this represent?",
-                options: ["(A) The father's disappointment in Derek's injury.", "(B) Unconditional support and the spirit of 'finishing together'.", "(C) An attempt to force Derek to stop running immediately.", "(D) A rule violation that Derek didn't want."],
-                ans: 1,
-                reason: "父親的加入象徵了「並肩作戰」，展現了除了個人意志外，親情的支持也是完成壯舉的重要動力。"
-            }
-        ];
-
-        // Init Quiz
-        const quizStack = document.getElementById('quiz-stack');
-        quizData.forEach((q, qIdx) => {
-            const div = document.createElement('div');
-            div.className = "quiz-item";
-            div.innerHTML = `
-                <p class="quiz-question font-bold mb-6">${qIdx+1}. ${q.q}</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    ${q.options.map((opt, oIdx) => `
-                        <button onclick="checkQuiz(this, ${oIdx === q.ans}, 'Q${qIdx}')" class="quiz-option text-left p-5 rounded-2xl bg-white text-slate-600 font-medium">${opt}</button>
-                    `).join('')}
-                </div>
-                <div id="exp-Q${qIdx}" class="hidden p-6 bg-slate-50 border-l-4 border-l-indigo-500 rounded-r-2xl text-sm leading-relaxed text-slate-700 animate-in slide-in-from-left duration-300">
-                    <strong class="text-indigo-600 block mb-1">解析與反饋：</strong>${q.reason}
-                </div>
-            `;
-            quizStack.appendChild(div);
-        });
-
-        // Init Words
-        const wordContainer = document.getElementById('word-container');
         const words = targetText.split(/\s+/);
+        
+        // --- 朗讀區初始化 ---
+        const wordContainer = document.getElementById('word-container');
         words.forEach((w, i) => {
             const span = document.createElement('span');
             span.textContent = w;
@@ -317,20 +212,11 @@
             wordContainer.appendChild(span);
         });
 
-        // Audio System
+        // --- TTS & STT 邏輯 (保持原有優化功能) ---
         let speechSynth = window.speechSynthesis;
         let utterance = new SpeechSynthesisUtterance(targetText);
         let isAudioPlaying = false;
-        
-        function setBestVoice() {
-            let voices = speechSynth.getVoices();
-            let preferred = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || 
-                        voices.find(v => v.lang === 'en-US') ||
-                        voices[0];
-            if (preferred) utterance.voice = preferred;
-        }
-        speechSynth.onvoiceschanged = setBestVoice;
-        utterance.rate = 0.85;
+        utterance.rate = 0.8;
 
         function toggleDemo() {
             if (isAudioPlaying) {
@@ -338,13 +224,8 @@
                 isAudioPlaying = false;
                 document.getElementById('audio-icon').className = "fa-solid fa-play";
             } else {
-                if (speechSynth.paused) {
-                    speechSynth.resume();
-                } else {
-                    speechSynth.cancel();
-                    setBestVoice();
-                    speechSynth.speak(utterance);
-                }
+                if (speechSynth.paused) speechSynth.resume();
+                else speechSynth.speak(utterance);
                 isAudioPlaying = true;
                 document.getElementById('audio-icon').className = "fa-solid fa-pause";
             }
@@ -354,84 +235,75 @@
             document.getElementById('audio-icon').className = "fa-solid fa-play";
         };
 
-        // Speech Recognition
         let recognition;
         let isRecording = false;
         let matchedIndices = new Set();
-        let transcriptBuffer = "";
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
-
             recognition.onresult = (event) => {
+                let finalTranscript = '';
                 let interimTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        transcriptBuffer += event.results[i][0].transcript + " ";
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
-                    }
+                    if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+                    else interimTranscript += event.results[i][0].transcript;
                 }
-                document.getElementById('live-transcript').textContent = interimTranscript;
-                processVoice(transcriptBuffer + interimTranscript);
+                document.getElementById('live-transcript').textContent = interimTranscript || finalTranscript;
+                processVoice(finalTranscript + interimTranscript);
             };
+            recognition.onerror = () => stopExam();
         }
 
-        function toggleTest() {
-            if (isRecording) stopExam();
-            else startExam();
-        }
-
-        function startExam() {
-            if (!recognition) return alert("抱歉，您的瀏覽器不支援此語音功能。");
-            isRecording = true;
-            matchedIndices.clear();
-            transcriptBuffer = "";
-            resetWordStyles();
-            document.getElementById('score-report').classList.add('hidden');
-            document.getElementById('waiting-status').classList.remove('hidden');
-            document.getElementById('completed-status').classList.add('hidden');
-            
-            recognition.start();
-            updateUI(true);
+        async function startExam() {
+            if (!recognition) return alert("瀏覽器不支援。");
+            try {
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+                matchedIndices.clear();
+                words.forEach((_, i) => document.getElementById(`word-${i}`).className = "word-span word-pending");
+                document.getElementById('score-report').classList.add('hidden');
+                recognition.start();
+                isRecording = true;
+                updateUI(true);
+            } catch (err) {
+                document.getElementById('mic-error-msg').classList.remove('hidden');
+            }
         }
 
         function stopExam() {
+            if (recognition) recognition.stop();
             isRecording = false;
-            recognition.stop();
             updateUI(false);
-            generateReport();
+            if (matchedIndices.size > 0) generateReport();
         }
+
+        function toggleTest() { isRecording ? stopExam() : startExam(); }
 
         function updateUI(active) {
             const btn = document.getElementById('record-ctrl-btn');
             const icon = document.getElementById('btn-icon');
             const text = document.getElementById('btn-text');
-            const statusDot = document.getElementById('status-dot');
-            const statusText = document.getElementById('status-text');
+            const dot = document.getElementById('status-dot');
 
             if (active) {
-                btn.className = "bg-red-500 text-white px-12 py-5 rounded-2xl font-black text-lg flex items-center gap-4 shadow-xl recording-active";
-                icon.className = "fa-solid fa-stop-circle";
-                text.textContent = "完成並計算分數";
-                statusDot.className = "w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)]";
-                statusText.textContent = "Assessing...";
+                btn.className = "bg-red-500 text-white w-full md:w-auto px-10 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md recording-active";
+                icon.className = "fa-solid fa-square";
+                text.textContent = "停止辨識";
+                dot.className = "w-2 h-2 rounded-full bg-red-500";
             } else {
-                btn.className = "btn-gold px-12 py-5 rounded-2xl font-black text-lg flex items-center gap-4 shadow-xl";
-                icon.className = "fa-solid fa-rotate-right";
-                text.textContent = "重新開始評量";
-                statusDot.className = "w-2 h-2 rounded-full bg-emerald-500";
-                statusText.textContent = "Exam Finished";
+                btn.className = "btn-gold w-full md:w-auto px-10 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md";
+                icon.className = "fa-solid fa-microphone";
+                text.textContent = matchedIndices.size > 0 ? "重新測驗" : "開始語音辨識";
+                dot.className = "w-2 h-2 rounded-full bg-emerald-500";
             }
         }
 
         function processVoice(input) {
             const spoken = input.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/);
             const targetClean = targetText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/);
-
             targetClean.forEach((target, i) => {
                 if (spoken.includes(target)) {
                     document.getElementById(`word-${i}`).className = "word-span word-matched";
@@ -441,85 +313,112 @@
         }
 
         function generateReport() {
-            const total = words.length;
-            const correct = matchedIndices.size;
-            const accuracy = Math.round((correct / total) * 100);
-            
+            const accuracy = Math.round((matchedIndices.size / words.length) * 100);
             document.getElementById('score-report').classList.remove('hidden');
-            document.getElementById('waiting-status').classList.add('hidden');
-            document.getElementById('completed-status').classList.remove('hidden');
-            
-            // Score animation
-            animateScoreValue(accuracy);
-            
-            // Bars & Circle animation
+            animateValue('final-score', 0, accuracy, 1000, '%');
             setTimeout(() => {
-                const fluency = Math.min(100, accuracy + Math.floor(Math.random() * 8));
-                document.getElementById('fluency-bar').style.width = fluency + '%';
-                document.getElementById('fluency-val').textContent = fluency + '%';
-                
-                document.getElementById('precision-bar').style.width = accuracy + '%';
+                document.getElementById('fluency-val').textContent = Math.min(100, accuracy + 5) + '%';
                 document.getElementById('precision-val').textContent = accuracy + '%';
-                
                 document.getElementById('progress-circle').setAttribute('stroke-dasharray', `${accuracy}, 100`);
-            }, 100);
+                const feedbackList = document.getElementById('feedback-list');
+                feedbackList.innerHTML = accuracy > 70 ? 
+                    "<li>語調穩定，單字清晰</li><li>嘗試增加連音的流暢度</li>" : 
+                    "<li>錄音不完全或發音不準</li><li>建議點擊'聽示範'再試一次</li>";
+            }, 500);
+            document.getElementById('score-report').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
 
-            // Analysis Content
-            const feedbackList = document.getElementById('feedback-list');
-            feedbackList.innerHTML = "";
-            const tips = [];
-            
-            if (accuracy >= 90) {
-                tips.push("<li><i class='fa-solid fa-star text-yellow-500 mr-2'></i>表現優異！發音精準度極高。</li>");
-                tips.push("<li><i class='fa-solid fa-bullseye text-blue-400 mr-2'></i>可以嘗試在 'completely torn' 練習情緒轉折。</li>");
-            } else if (accuracy >= 70) {
-                tips.push("<li><i class='fa-solid fa-circle-check text-green-400 mr-2'></i>大部分單字發音正確，注意灰色的連音。</li>");
-                tips.push("<li><i class='fa-solid fa-keyboard text-slate-400 mr-2'></i>'unbearable' 建議多練習重音分佈。</li>");
-            } else {
-                tips.push("<li><i class='fa-solid fa-ear-listen text-blue-400 mr-2'></i>建議重複聽示範音檔，並開口跟讀。</li>");
+        function animateValue(id, start, end, duration, suffix = '') {
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerText = Math.floor(progress * (end - start) + start) + suffix;
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // --- 恢復原有的複雜閱讀測驗題目 ---
+        const quizData = [
+            { 
+                q: "The author uses short fragments like 'One hundred meters. ... One hundred and fifty meters.' What is the primary purpose?", 
+                options: [
+                    "To save space and make the story shorter.",
+                    "To create suspense and mimic the rhythm of the race.",
+                    "To show Derek was moving slowly at the beginning.",
+                    "To focus on distance rather than Derek's emotions."
+                ], 
+                ans: 1 
+            },
+            { 
+                q: "What does the repetition of 'Somehow' emphasize in the text?", 
+                options: [
+                    "The physical technique Derek used.",
+                    "The doubt the author had about Derek.",
+                    "The mysterious and incredible nature of determination.",
+                    "The fact that Derek was lost on the track."
+                ], 
+                ans: 2 
+            },
+            { 
+                q: "What does the 'Heart of a Champion' refer to at the end of the text?", 
+                options: [
+                    "Physical health of an athlete's heart.",
+                    "Winning a gold medal regardless of the cost.",
+                    "The speed of recovery from injury.",
+                    "Inner strength to finish despite failure or pain."
+                ], 
+                ans: 3 
+            },
+            { 
+                q: "In the later part of the story, Derek's father joined him. What did this represent?", 
+                options: [
+                    "The father's disappointment in Derek's injury.",
+                    "Unconditional support and the spirit of 'finishing together'.",
+                    "An attempt to force Derek to stop running immediately.",
+                    "A rule violation that Derek didn't want."
+                ], 
+                ans: 1 
             }
+        ];
 
-            if (!matchedIndices.has(words.findIndex(w => w.includes("collapse")))) {
-                tips.push("<li class='text-yellow-400'><i class='fa-solid fa-triangle-exclamation mr-2'></i>加強 'collapse' 的氣音處理。</li>");
-            }
+        const quizStack = document.getElementById('quiz-stack');
+        quizData.forEach((item, qIdx) => {
+            const div = document.createElement('div');
+            div.className = "quiz-item";
+            div.innerHTML = `
+                <div class="flex gap-3 items-start mb-4">
+                    <span class="bg-indigo-600 text-white font-bold px-2 py-1 rounded text-[10px] mt-1 shrink-0">Q${qIdx+1}</span>
+                    <p class="font-bold text-slate-800 text-base leading-snug">${item.q}</p>
+                </div>
+                <div class="grid grid-cols-1 gap-1 pl-9">
+                    ${item.options.map((opt, oIdx) => `
+                        <button onclick="checkAnswer(this, ${oIdx === item.ans})" class="quiz-option">
+                            <span class="inline-block w-6 text-slate-400 font-mono">${String.fromCharCode(65+oIdx)}.</span>
+                            ${opt}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            quizStack.appendChild(div);
+        });
 
-            feedbackList.innerHTML = tips.join("");
-        }
-
-        function animateScoreValue(target) {
-            const el = document.getElementById('final-score');
-            let current = 0;
-            if (window.scoreInterval) clearInterval(window.scoreInterval);
-            
-            window.scoreInterval = setInterval(() => {
-                if (current >= target) {
-                    el.textContent = target + "%";
-                    clearInterval(window.scoreInterval);
-                } else {
-                    current++;
-                    el.textContent = current + "%";
-                }
-            }, 20);
-        }
-
-        function resetWordStyles() {
-            words.forEach((_, i) => {
-                document.getElementById(`word-${i}`).className = "word-span word-pending";
-            });
-        }
-
-        function checkQuiz(btn, isCorrect, id) {
+        function checkAnswer(btn, isCorrect) {
             const container = btn.parentElement;
             container.querySelectorAll('button').forEach(b => {
                 b.disabled = true;
-                b.className = "quiz-option text-left p-5 rounded-2xl bg-slate-50 text-slate-300 pointer-events-none";
+                b.classList.add('opacity-40');
             });
+            btn.classList.remove('opacity-40');
             if (isCorrect) {
-                btn.className = "quiz-option text-left p-5 rounded-2xl border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold";
+                btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700', 'font-bold');
+                btn.innerHTML += ' <i class="fa-solid fa-circle-check float-right mt-1"></i>';
             } else {
-                btn.className = "quiz-option text-left p-5 rounded-2xl border-2 border-red-500 bg-red-50 text-red-700 font-bold";
+                btn.classList.add('border-red-400', 'bg-red-50', 'text-red-700', 'font-bold');
+                btn.innerHTML += ' <i class="fa-solid fa-circle-xmark float-right mt-1"></i>';
             }
-            document.getElementById('exp-' + id).classList.remove('hidden');
         }
     </script>
 </body>
