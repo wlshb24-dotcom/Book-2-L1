@@ -95,9 +95,6 @@
             display: block;
             margin-bottom: 0.5rem;
         }
-        .quiz-option:active {
-            transform: scale(0.98);
-        }
     </style>
 </head>
 <body class="min-h-screen pb-10">
@@ -138,9 +135,10 @@
 
             <div class="flex flex-col items-center gap-4">
                 <div id="mic-error-msg" class="hidden text-xs text-red-500 font-bold bg-red-50 p-3 rounded-xl text-center w-full">
-                    <i class="fa-solid fa-circle-exclamation mr-1"></i> 麥克風啟動失敗。請確保使用 HTTPS 並允許瀏覽器存取麥克風。
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> 麥克風啟動失敗：請確認瀏覽器權限已開啟，且網址為 HTTPS。
                 </div>
-                <button id="record-ctrl-btn" onclick="toggleTest()" class="btn-gold w-full md:w-auto px-8 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md active:scale-95 transition-all">
+                <!-- 改進點：onclick 事件直接執行核心邏輯 -->
+                <button id="record-ctrl-btn" onclick="handleRecordClick()" class="btn-gold w-full md:w-auto px-8 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md active:scale-95 transition-all">
                     <i class="fa-solid fa-microphone" id="btn-icon"></i>
                     <span id="btn-text">開始語音辨識</span>
                 </button>
@@ -148,39 +146,36 @@
             </div>
         </section>
 
-        <!-- 分析報告 -->
-        <div id="score-report-container">
-            <section id="score-report" class="hidden glass-card rounded-3xl p-6 shadow-md border-l-8 border-l-blue-600 mb-6 animate-in slide-in-from-bottom duration-500">
-                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">口說分析報告</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                    <div class="text-center relative py-2">
-                        <svg class="w-28 h-28 mx-auto transform -rotate-90" viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
-                            <circle id="progress-circle" cx="18" cy="18" r="16" fill="none" class="stroke-blue-600 transition-all duration-1000" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round"></circle>
-                        </svg>
-                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                            <div class="text-2xl font-black text-slate-800" id="final-score">0%</div>
-                            <div class="text-[8px] font-bold text-slate-400 uppercase">Success</div>
-                        </div>
-                    </div>
-                    <div class="space-y-3">
-                        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center">
-                            <span class="text-[10px] font-bold text-emerald-600 uppercase">Fluency 流暢度</span>
-                            <span id="fluency-val" class="font-black text-emerald-800 italic">0%</span>
-                        </div>
-                        <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center">
-                            <span class="text-[10px] font-bold text-blue-600 uppercase">Accuracy 準確度</span>
-                            <span id="precision-val" class="font-black text-blue-800 italic">0%</span>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-slate-900 rounded-2xl text-white h-full">
-                        <h4 class="text-[10px] font-bold text-[#d4af37] uppercase mb-2">AI Feedback</h4>
-                        <ul id="feedback-list" class="text-[11px] space-y-1 opacity-90 leading-relaxed list-disc pl-3">
-                        </ul>
+        <!-- 分析報告 (預設隱藏) -->
+        <section id="score-report" class="hidden glass-card rounded-3xl p-6 shadow-md border-l-8 border-l-blue-600 mb-6">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">口說分析報告</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <div class="text-center relative py-2">
+                    <svg class="w-28 h-28 mx-auto transform -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
+                        <circle id="progress-circle" cx="18" cy="18" r="16" fill="none" class="stroke-blue-600 transition-all duration-1000" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round"></circle>
+                    </svg>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <div class="text-2xl font-black text-slate-800" id="final-score">0%</div>
+                        <div class="text-[8px] font-bold text-slate-400 uppercase">Success</div>
                     </div>
                 </div>
-            </section>
-        </div>
+                <div class="space-y-3">
+                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-emerald-600 uppercase">Fluency 流暢度</span>
+                        <span id="fluency-val" class="font-black text-emerald-800 italic">0%</span>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-blue-600 uppercase">Accuracy 準確度</span>
+                        <span id="precision-val" class="font-black text-blue-800 italic">0%</span>
+                    </div>
+                </div>
+                <div class="p-4 bg-slate-900 rounded-2xl text-white h-full">
+                    <h4 class="text-[10px] font-bold text-[#d4af37] uppercase mb-2">AI Feedback</h4>
+                    <ul id="feedback-list" class="text-[11px] space-y-1 opacity-90 leading-relaxed list-disc pl-3"></ul>
+                </div>
+            </div>
+        </section>
 
         <!-- 02. 閱讀測驗區 -->
         <section class="glass-card rounded-3xl p-6 shadow-md">
@@ -191,10 +186,7 @@
                 </h2>
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider ml-9 italic">請根據課文細節選擇最正確的選項</p>
             </div>
-            
-            <div class="space-y-10" id="quiz-stack">
-                <!-- 題目由 JS 動態生成 -->
-            </div>
+            <div class="space-y-10" id="quiz-stack"></div>
         </section>
     </main>
 
@@ -202,7 +194,7 @@
         const targetText = "Suddenly, he feels a sharp pain in his leg. The pain is unbearable, and he grabs his powerless limb in horror. Immediately, he realizes what has happened: his right hamstring is completely torn. All eyes in the crowd are on him, watching him collapse to the ground in pain.";
         const words = targetText.split(/\s+/);
         
-        // --- 初始化朗讀單字 ---
+        // --- 初始化 UI 單字 ---
         const wordContainer = document.getElementById('word-container');
         words.forEach((w, i) => {
             const span = document.createElement('span');
@@ -212,118 +204,100 @@
             wordContainer.appendChild(span);
         });
 
-        // --- 語音示範 (TTS) ---
+        // --- TTS 示範 ---
         let speechSynth = window.speechSynthesis;
         let utterance = new SpeechSynthesisUtterance(targetText);
         let isAudioPlaying = false;
         utterance.rate = 0.8;
-
-        function toggleDemo() {
-            if (isAudioPlaying) {
-                speechSynth.pause();
-                isAudioPlaying = false;
-                document.getElementById('audio-icon').className = "fa-solid fa-play";
-            } else {
-                if (speechSynth.paused) speechSynth.resume();
-                else speechSynth.speak(utterance);
-                isAudioPlaying = true;
-                document.getElementById('audio-icon').className = "fa-solid fa-pause";
-            }
-        }
         utterance.onend = () => {
             isAudioPlaying = false;
             document.getElementById('audio-icon').className = "fa-solid fa-play";
         };
 
-        // --- 語音辨識核心 (STT) ---
-        let recognition;
+        function toggleDemo() {
+            if (isAudioPlaying) {
+                speechSynth.cancel();
+                isAudioPlaying = false;
+                document.getElementById('audio-icon').className = "fa-solid fa-play";
+            } else {
+                speechSynth.speak(utterance);
+                isAudioPlaying = true;
+                document.getElementById('audio-icon').className = "fa-solid fa-pause";
+            }
+        }
+
+        // --- STT 核心邏輯 (重構為由點擊觸發) ---
+        let recognition = null;
         let isRecording = false;
         let matchedIndices = new Set();
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        function initRecognition() {
-            if (!SpeechRecognition) return null;
-            const rec = new SpeechRecognition();
-            rec.continuous = true;
-            rec.interimResults = true;
-            rec.lang = 'en-US';
-
-            rec.onstart = () => {
-                isRecording = true;
-                updateUI(true);
-            };
-
-            rec.onresult = (event) => {
-                let interimTranscript = '';
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-                    else interimTranscript += event.results[i][0].transcript;
-                }
-                document.getElementById('live-transcript').textContent = interimTranscript || finalTranscript;
-                processVoice(finalTranscript + interimTranscript);
-            };
-
-            rec.onerror = (event) => {
-                console.error("Recognition Error:", event.error);
-                if (event.error === 'not-allowed') {
-                    document.getElementById('mic-error-msg').classList.remove('hidden');
-                }
-                stopExam();
-            };
-
-            rec.onend = () => {
-                if (isRecording) rec.start(); // 意外斷掉自動重啟 (如果是因為超時)
-            };
-            return rec;
-        }
-
-        // 頁面載入時先建立物件
-        recognition = initRecognition();
-
-        async function startExam() {
-            if (!recognition) {
-                alert("您的瀏覽器不支援語音辨識，請使用 Chrome 或 Edge。");
+        async function handleRecordClick() {
+            if (isRecording) {
+                stopRecording();
                 return;
             }
-            
+
+            if (!SpeechRecognition) {
+                alert("此瀏覽器不支援語音功能，請更換至 Chrome。");
+                return;
+            }
+
             try {
-                // 檢查權限
+                // 1. 先獲取麥克風權限
                 await navigator.mediaDevices.getUserMedia({ audio: true });
                 document.getElementById('mic-error-msg').classList.add('hidden');
-                
-                matchedIndices.clear();
-                words.forEach((_, i) => document.getElementById(`word-${i}`).className = "word-span word-pending");
-                document.getElementById('score-report').classList.add('hidden');
-                
+
+                // 2. 建立辨識物件 (每次開始測驗都重新建立，確保狀態乾淨)
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    updateUI(true);
+                    matchedIndices.clear();
+                    words.forEach((_, i) => document.getElementById(`word-${i}`).className = "word-span word-pending");
+                    document.getElementById('score-report').classList.add('hidden');
+                };
+
+                recognition.onresult = (event) => {
+                    let combined = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        combined += event.results[i][0].transcript;
+                    }
+                    document.getElementById('live-transcript').textContent = combined;
+                    processVoice(combined);
+                };
+
+                recognition.onerror = (e) => {
+                    console.error("STT Error:", e.error);
+                    if(e.error === 'not-allowed') document.getElementById('mic-error-msg').classList.remove('hidden');
+                    stopRecording();
+                };
+
+                recognition.onend = () => {
+                    if (isRecording) recognition.start(); // 處理靜默超時
+                };
+
+                // 3. 正式啟動
                 recognition.start();
+
             } catch (err) {
-                console.error("Mic Access Error:", err);
+                console.error("Mic access denied:", err);
                 document.getElementById('mic-error-msg').classList.remove('hidden');
             }
         }
 
-        function stopExam() {
+        function stopRecording() {
             isRecording = false;
             if (recognition) {
-                recognition.onend = null; // 暫時關閉自動重啟
+                recognition.onend = null;
                 recognition.stop();
             }
             updateUI(false);
             if (matchedIndices.size > 0) generateReport();
-            
-            // 重新綁回自動啟動邏輯供下次使用
-            setTimeout(() => {
-                recognition = initRecognition();
-            }, 500);
-        }
-
-        function toggleTest() {
-            if (isRecording) {
-                stopExam();
-            } else {
-                startExam();
-            }
         }
 
         function updateUI(active) {
@@ -335,7 +309,7 @@
             if (active) {
                 btn.className = "bg-red-500 text-white w-full md:w-auto px-10 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md recording-active";
                 icon.className = "fa-solid fa-square";
-                text.textContent = "停止辨識";
+                text.textContent = "結束評量";
                 dot.className = "w-2 h-2 rounded-full bg-red-500";
             } else {
                 btn.className = "btn-gold w-full md:w-auto px-10 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md";
@@ -367,9 +341,8 @@
                 const feedbackList = document.getElementById('feedback-list');
                 feedbackList.innerHTML = accuracy > 70 ? 
                     "<li>語調穩定，單字清晰</li><li>嘗試增加連音的流暢度</li>" : 
-                    "<li>辨識率較低，建議更靠近麥克風</li><li>點擊'聽示範'模仿節奏</li>";
+                    "<li>辨識率較低，建議更靠近麥克風</li><li>多練習 Suddenly 與 Unbearable 的發音</li>";
             }, 500);
-            document.getElementById('score-report').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function animateValue(id, start, end, duration, suffix = '') {
@@ -384,46 +357,26 @@
             window.requestAnimationFrame(step);
         }
 
-        // --- 閱讀測驗題目 ---
+        // --- 閱讀測驗資料 ---
         const quizData = [
             { 
                 q: "The author uses short fragments like 'One hundred meters. ... One hundred and fifty meters.' What is the primary purpose?", 
-                options: [
-                    "To save space and make the story shorter.",
-                    "To create suspense and mimic the rhythm of the race.",
-                    "To show Derek was moving slowly at the beginning.",
-                    "To focus on distance rather than Derek's emotions."
-                ], 
+                options: ["To save space.", "To create suspense and mimic the rhythm of the race.", "To show Derek was slow.", "To focus on distance only."], 
                 ans: 1 
             },
             { 
                 q: "What does the repetition of 'Somehow' emphasize in the text?", 
-                options: [
-                    "The physical technique Derek used.",
-                    "The doubt the author had about Derek.",
-                    "The mysterious and incredible nature of determination.",
-                    "The fact that Derek was lost on the track."
-                ], 
+                options: ["Physical technique.", "Doubt about Derek.", "The mysterious nature of determination.", "Derek being lost."], 
                 ans: 2 
             },
             { 
-                q: "What does the 'Heart of a Champion' refer to at the end of the text?", 
-                options: [
-                    "Physical health of an athlete's heart.",
-                    "Winning a gold medal regardless of the cost.",
-                    "The speed of recovery from injury.",
-                    "Inner strength to finish despite failure or pain."
-                ], 
+                q: "What does 'Heart of a Champion' refer to?", 
+                options: ["Physical health.", "Winning a gold medal.", "Speed of recovery.", "Inner strength to finish despite pain."], 
                 ans: 3 
             },
             { 
-                q: "In the later part of the story, Derek's father joined him. What did this represent?", 
-                options: [
-                    "The father's disappointment in Derek's injury.",
-                    "Unconditional support and the spirit of 'finishing together'.",
-                    "An attempt to force Derek to stop running immediately.",
-                    "A rule violation that Derek didn't want."
-                ], 
+                q: "Derek's father joined him. What did this represent?", 
+                options: ["Disappointment.", "Unconditional support.", "Forcing him to stop.", "A rule violation."], 
                 ans: 1 
             }
         ];
@@ -458,10 +411,8 @@
             btn.classList.remove('opacity-40');
             if (isCorrect) {
                 btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700', 'font-bold');
-                btn.innerHTML += ' <i class="fa-solid fa-circle-check float-right mt-1"></i>';
             } else {
                 btn.classList.add('border-red-400', 'bg-red-50', 'text-red-700', 'font-bold');
-                btn.innerHTML += ' <i class="fa-solid fa-circle-xmark float-right mt-1"></i>';
             }
         }
     </script>
