@@ -1,420 +1,273 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lesson 1: The Heart of a Champion | 進階語音評量</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>In-Flight Menu Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Noto+Sans+TC:wght@300;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; padding: 10px; margin: 0; }
+        .container { width: 100%; box-sizing: border-box; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #0056b3; font-size: 1.5em; margin-top: 5px; }
+        .role-section { background: #eef2f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .role-title { font-weight: bold; font-size: 1.1em; margin-bottom: 10px; color: #2c3e50; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        select, textarea, input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; font-family: inherit; box-sizing: border-box; font-size: 1em; }
+        textarea { height: 120px; resize: vertical; }
         
-        :root {
-            --primary-navy: #0f172a;
-            --accent-gold: #d4af37;
-        }
-
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
-            -webkit-tap-highlight-color: transparent;
-        }
+        .button-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .starter-btn { background: #0056b3; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 0.95em; text-align: left; }
+        .generate-btn { display: block; width: 100%; padding: 18px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 1.2em; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 6px rgba(40,167,69,0.3); }
+        .download-btn { display: none; width: 100%; padding: 15px; background: #17a2b8; color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 15px; }
         
-        .academic-header {
-            background: linear-gradient(135deg, var(--primary-navy) 0%, #1e293b 100%);
-        }
+        .toolbar { margin-bottom: 10px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #ddd;}
+        canvas { border: 2px solid #bbb; background: #fff; cursor: crosshair; border-radius: 5px; width: 100%; aspect-ratio: 4/3; display: block; touch-action: none; box-sizing: border-box; }
+        .clear-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.9em; cursor: pointer;}
 
-        .english-quote {
-            font-family: 'Libre Baskerville', serif;
-            line-height: 1.8;
-            word-spacing: 0.1em;
-        }
-
-        .word-span {
-            display: inline-block;
-            margin: 1px 2px;
-            padding: 1px 4px;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-            font-size: 1.2rem;
-        }
-
-        @media (min-width: 768px) {
-            .word-span { font-size: 1.75rem; }
-        }
-
-        .word-matched {
-            color: #059669;
-            background-color: #ecfdf5;
-            font-weight: 700;
-        }
-
-        .word-pending {
-            color: #64748b;
-        }
-
-        .glass-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-        }
-
-        .btn-gold {
-            background: var(--accent-gold);
-            color: white;
-        }
-
-        .recording-active {
-            animation: pulse-red 1.5s infinite;
-            background-color: #ef4444 !important;
-        }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        .quiz-item {
-            border-bottom: 1px solid #f1f5f9;
-            padding-bottom: 2rem;
-        }
-        .quiz-item:last-child {
-            border-bottom: none;
-        }
-        .quiz-option {
-            width: 100%;
-            text-align: left;
-            padding: 1rem;
-            border-radius: 0.75rem;
-            border: 2px solid #f1f5f9;
-            background: white;
-            transition: all 0.2s;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            display: block;
-            margin-bottom: 0.5rem;
-        }
+        #menu-output-container { margin-top: 30px; display: none; }
+        #menu-output { padding: 20px; border-radius: 12px; text-align: center; }
+        .theme-luxury { background: #1a1a1a; color: #f4d03f; font-family: 'Georgia', serif; border: 3px solid #d4af37; }
+        .theme-eco { background: #e8f5e9; color: #2e7d32; font-family: 'Arial', sans-serif; border: 3px solid #81c784; }
+        
+        .output-title { font-size: 1.8em; margin-bottom: 20px; border-bottom: 2px solid currentColor; padding-bottom: 10px; display: inline-block; }
+        .menu-content { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        #output-dish-name { margin: 0 0 10px 0; font-size: 1.4em; font-style: italic; }
+        #output-image { width: 100%; max-width: 400px; border-radius: 8px; background: white; border: 2px solid currentColor; }
+        .output-text { font-size: 1.05em; line-height: 1.5; text-align: left; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 8px; width: 100%; box-sizing: border-box; }
+        .output-features { display: flex; flex-direction: column; gap: 10px; font-style: italic; font-size: 0.9em; margin-top: 15px; padding-top: 15px; border-top: 1px dashed currentColor; }
     </style>
 </head>
-<body class="min-h-screen pb-10">
+<body onload="applyTemplate()">
 
-    <nav class="academic-header text-white py-4 px-4 shadow-md sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-graduation-cap text-xl text-[#d4af37]"></i>
-                <span class="font-bold tracking-wider text-sm">L1 REVIEW</span>
+<div class="container">
+    <h1>✈️ In-Flight Menu Builder</h1>
+
+    <div class="role-section">
+        <div class="role-title">🔬 The Scientist: Identify the Problem</div>
+        <select id="problem">
+            <option value="Dry Cabin Air">Dry Cabin Air (Low humidity)</option>
+            <option value="Blocked Senses">Blocked Senses (Stuffy noses)</option>
+            <option value="Engine Distraction">Engine Distraction (Constant noise)</option>
+        </select>
+    </div>
+
+    <div class="role-section">
+        <div class="role-title">🧑‍🍳 The Head Chef: Choose the Solution</div>
+        <select id="solution">
+            <option value="Umami Boost">Umami Boost (Tomatoes & mushrooms)</option>
+            <option value="Texture Control">Texture Control (Medium-rare prep)</option>
+            <option value="Sensory Clearing">Sensory Clearing (Nasal sprays)</option>
+        </select>
+    </div>
+
+    <div class="role-section">
+        <div class="role-title">📝 The Copy Editor: Draft Text</div>
+        <div class="button-group">
+            <button class="starter-btn" onclick="insertText('To combat the dulling effects of ')">Start: "To combat..."</button>
+            <button class="starter-btn" onclick="insertText('Given that the cabin unique environment compromises ')">Start: "Given that..."</button>
+            <button class="starter-btn" onclick="insertText('Our culinary team counteracts this phenomenon by ')">Solution: "Our team..."</button>
+        </div>
+        <textarea id="promo-text" placeholder="Combine the Scientist's and Chef's ideas here... (50-80 words)"></textarea>
+        <div id="word-count" style="font-size: 0.85em; text-align: right; color: #555;">Word Count: 0</div>
+    </div>
+
+    <div class="role-section">
+        <div class="role-title">🎨 The Art Director: Design & Draw</div>
+        <select id="theme" style="margin-bottom: 15px;">
+            <option value="theme-luxury">Menu Theme: Luxury First Class</option>
+            <option value="theme-eco">Menu Theme: Modern Eco</option>
+        </select>
+
+        <label>Name Your Signature Dish:</label>
+        <input type="text" id="dish-name" placeholder="e.g., High-Altitude Mushroom Steak">
+        
+        <label>Canvas Background Template:</label>
+        <select id="canvas-template" onchange="applyTemplate()">
+            <option value="blank">Blank White Canvas</option>
+            <option value="first-class">First Class Ceramic Plate</option>
+            <option value="eco-tray">Economy Meal Tray</option>
+        </select>
+
+        <label>Or Upload/Take a Photo to Draw Over:</label>
+        <input type="file" id="image-upload" accept="image/*" capture="environment">
+
+        <label style="margin-top: 10px;">Draw the Food:</label>
+        <div class="toolbar">
+            <div>
+                <input type="color" id="brush-color" value="#000000">
+                <input type="range" id="brush-size" min="1" max="20" value="4">
             </div>
-            <div id="status-display" class="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full border border-white/20">
-                <div class="w-2 h-2 rounded-full bg-slate-400" id="status-dot"></div>
-                <span class="text-[10px] font-bold uppercase" id="status-text">Standby</span>
+            <button class="clear-btn" onclick="applyTemplate()">🗑️ Clear</button>
+        </div>
+        <canvas id="drawing-board" width="600" height="450"></canvas>
+    </div>
+
+    <button class="generate-btn" onclick="generateMenu()">✨ Generate Menu</button>
+
+    <div id="menu-output-container">
+        <div id="menu-output">
+            <div class="output-title">Sky-High Dining</div>
+            <div class="menu-content">
+                <h3 id="output-dish-name"></h3>
+                <img id="output-image" alt="Signature Dish">
+                <div class="output-text" id="output-promo"></div>
+            </div>
+            <div class="output-features">
+                <span id="output-prob-badge"></span>
+                <span id="output-sol-badge"></span>
             </div>
         </div>
-    </nav>
+        <button id="download-btn" class="download-btn" onclick="downloadImage()">📸 Download Menu for Google Classroom</button>
+    </div>
 
-    <main class="max-w-4xl mx-auto px-4 py-6">
+</div>
+
+<script>
+    document.getElementById('promo-text').addEventListener('input', function() {
+        let text = this.value.trim();
+        let words = text === "" ? 0 : text.split(/\s+/).length;
+        let counter = document.getElementById('word-count');
+        counter.textContent = "Word Count: " + words;
+        counter.style.color = (words < 50 || words > 80) ? "red" : "green";
+    });
+
+    function insertText(text) {
+        let textarea = document.getElementById('promo-text');
+        textarea.value += text;
+        textarea.focus();
+        textarea.dispatchEvent(new Event('input')); 
+    }
+
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+
+    // Apply specific backgrounds
+    function applyTemplate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let template = document.getElementById('canvas-template').value;
         
-        <!-- 01. 朗讀測驗 -->
-        <section class="glass-card rounded-3xl p-6 shadow-sm mb-6 border-b-4 border-b-[#d4af37]">
-            <div class="flex justify-between items-center mb-5">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
-                    <span class="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center text-xs">01</span>
-                    Oral Reading Task
-                </h2>
-                <button id="play-pause-btn" onclick="toggleDemo()" class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl text-blue-600 font-bold text-xs">
-                    <i class="fa-solid fa-play" id="audio-icon"></i>
-                    <span id="audio-label">聽示範</span>
-                </button>
-            </div>
+        if (template === 'blank') {
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (template === 'first-class') {
+            ctx.fillStyle = "#2c3e50"; // Dark table
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.arc(canvas.width/2, canvas.height/2, canvas.height/2.2, 0, 2 * Math.PI);
+            ctx.fillStyle = "#f5f5f5"; // White plate
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = "#d4af37"; // Gold rim
+            ctx.stroke();
+            ctx.beginPath(); // reset path for drawing
+        } else if (template === 'eco-tray') {
+            ctx.fillStyle = "#bbdefb"; // Light blue tray table
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#eeeeee"; // Grey tray
+            let padding = 30;
+            ctx.fillRect(padding, padding, canvas.width - (padding*2), canvas.height - (padding*2));
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#9e9e9e";
+            ctx.strokeRect(padding, padding, canvas.width - (padding*2), canvas.height - (padding*2));
+            ctx.beginPath();
+        }
+    }
 
-            <div class="bg-slate-50 rounded-2xl p-5 md:p-8 border border-slate-100 mb-6">
-                <div id="word-container" class="english-quote text-left text-slate-700">
-                    <!-- Words injected here -->
-                </div>
-            </div>
+    // Image Upload Handling
+    document.getElementById('image-upload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                const x = (canvas.width / 2) - (img.width / 2) * scale;
+                const y = (canvas.height / 2) - (img.height / 2) * scale;
+                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+            }
+            img.src = event.target.result;
+        }
+        reader.readAsDataURL(file);
+    });
 
-            <div class="flex flex-col items-center gap-4">
-                <div id="mic-error-msg" class="hidden text-xs text-red-500 font-bold bg-red-50 p-3 rounded-xl text-center w-full">
-                    <i class="fa-solid fa-circle-exclamation mr-1"></i> 麥克風啟動失敗：請確認瀏覽器權限已開啟，且網址為 HTTPS。
-                </div>
-                <!-- 改進點：onclick 事件直接執行核心邏輯 -->
-                <button id="record-ctrl-btn" onclick="handleRecordClick()" class="btn-gold w-full md:w-auto px-8 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md active:scale-95 transition-all">
-                    <i class="fa-solid fa-microphone" id="btn-icon"></i>
-                    <span id="btn-text">開始語音辨識</span>
-                </button>
-                <div id="live-transcript" class="text-slate-400 text-xs italic font-medium h-4 overflow-hidden text-center w-full"></div>
-            </div>
-        </section>
-
-        <!-- 分析報告 (預設隱藏) -->
-        <section id="score-report" class="hidden glass-card rounded-3xl p-6 shadow-md border-l-8 border-l-blue-600 mb-6">
-            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">口說分析報告</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                <div class="text-center relative py-2">
-                    <svg class="w-28 h-28 mx-auto transform -rotate-90" viewBox="0 0 36 36">
-                        <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
-                        <circle id="progress-circle" cx="18" cy="18" r="16" fill="none" class="stroke-blue-600 transition-all duration-1000" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round"></circle>
-                    </svg>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <div class="text-2xl font-black text-slate-800" id="final-score">0%</div>
-                        <div class="text-[8px] font-bold text-slate-400 uppercase">Success</div>
-                    </div>
-                </div>
-                <div class="space-y-3">
-                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center">
-                        <span class="text-[10px] font-bold text-emerald-600 uppercase">Fluency 流暢度</span>
-                        <span id="fluency-val" class="font-black text-emerald-800 italic">0%</span>
-                    </div>
-                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center">
-                        <span class="text-[10px] font-bold text-blue-600 uppercase">Accuracy 準確度</span>
-                        <span id="precision-val" class="font-black text-blue-800 italic">0%</span>
-                    </div>
-                </div>
-                <div class="p-4 bg-slate-900 rounded-2xl text-white h-full">
-                    <h4 class="text-[10px] font-bold text-[#d4af37] uppercase mb-2">AI Feedback</h4>
-                    <ul id="feedback-list" class="text-[11px] space-y-1 opacity-90 leading-relaxed list-disc pl-3"></ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- 02. 閱讀測驗區 -->
-        <section class="glass-card rounded-3xl p-6 shadow-md">
-            <div class="mb-8">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2 mb-1">
-                    <span class="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center text-xs">02</span>
-                    Reading Comprehension
-                </h2>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider ml-9 italic">請根據課文細節選擇最正確的選項</p>
-            </div>
-            <div class="space-y-10" id="quiz-stack"></div>
-        </section>
-    </main>
-
-    <script>
-        const targetText = "Suddenly, he feels a sharp pain in his leg. The pain is unbearable, and he grabs his powerless limb in horror. Immediately, he realizes what has happened: his right hamstring is completely torn. All eyes in the crowd are on him, watching him collapse to the ground in pain.";
-        const words = targetText.split(/\s+/);
-        
-        // --- 初始化 UI 單字 ---
-        const wordContainer = document.getElementById('word-container');
-        words.forEach((w, i) => {
-            const span = document.createElement('span');
-            span.textContent = w;
-            span.id = `word-${i}`;
-            span.className = "word-span word-pending";
-            wordContainer.appendChild(span);
-        });
-
-        // --- TTS 示範 ---
-        let speechSynth = window.speechSynthesis;
-        let utterance = new SpeechSynthesisUtterance(targetText);
-        let isAudioPlaying = false;
-        utterance.rate = 0.8;
-        utterance.onend = () => {
-            isAudioPlaying = false;
-            document.getElementById('audio-icon').className = "fa-solid fa-play";
+    // Drawing mechanics
+    function getMousePos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
         };
+    }
 
-        function toggleDemo() {
-            if (isAudioPlaying) {
-                speechSynth.cancel();
-                isAudioPlaying = false;
-                document.getElementById('audio-icon').className = "fa-solid fa-play";
-            } else {
-                speechSynth.speak(utterance);
-                isAudioPlaying = true;
-                document.getElementById('audio-icon').className = "fa-solid fa-pause";
-            }
-        }
+    function startPosition(e) {
+        isDrawing = true;
+        draw(e);
+    }
 
-        // --- STT 核心邏輯 (重構為由點擊觸發) ---
-        let recognition = null;
-        let isRecording = false;
-        let matchedIndices = new Set();
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    function endPosition() {
+        isDrawing = false;
+        ctx.beginPath();
+    }
 
-        async function handleRecordClick() {
-            if (isRecording) {
-                stopRecording();
-                return;
-            }
+    function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault(); 
+        
+        ctx.lineWidth = document.getElementById('brush-size').value;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = document.getElementById('brush-color').value;
 
-            if (!SpeechRecognition) {
-                alert("此瀏覽器不支援語音功能，請更換至 Chrome。");
-                return;
-            }
+        const pos = getMousePos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
 
-            try {
-                // 1. 先獲取麥克風權限
-                await navigator.mediaDevices.getUserMedia({ audio: true });
-                document.getElementById('mic-error-msg').classList.add('hidden');
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mouseup', endPosition);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseout', endPosition);
+    canvas.addEventListener('touchstart', startPosition, { passive: false });
+    canvas.addEventListener('touchend', endPosition);
+    canvas.addEventListener('touchmove', draw, { passive: false });
 
-                // 2. 建立辨識物件 (每次開始測驗都重新建立，確保狀態乾淨)
-                recognition = new SpeechRecognition();
-                recognition.continuous = true;
-                recognition.interimResults = true;
-                recognition.lang = 'en-US';
+    // Output Generation
+    function generateMenu() {
+        document.getElementById('output-image').src = canvas.toDataURL("image/png");
+        document.getElementById('output-dish-name').innerText = document.getElementById('dish-name').value || "Chef's Special";
+        document.getElementById('output-promo').innerText = document.getElementById('promo-text').value;
+        document.getElementById('output-prob-badge').innerText = "🔬 Tackling: " + document.getElementById('problem').options[document.getElementById('problem').selectedIndex].text;
+        document.getElementById('output-sol-badge').innerText = "🧑‍🍳 Featuring: " + document.getElementById('solution').options[document.getElementById('solution').selectedIndex].text;
 
-                recognition.onstart = () => {
-                    isRecording = true;
-                    updateUI(true);
-                    matchedIndices.clear();
-                    words.forEach((_, i) => document.getElementById(`word-${i}`).className = "word-span word-pending");
-                    document.getElementById('score-report').classList.add('hidden');
-                };
+        let outputContainer = document.getElementById('menu-output-container');
+        let outputDiv = document.getElementById('menu-output');
+        
+        outputDiv.className = document.getElementById('theme').value;
+        outputContainer.style.display = "block";
+        document.getElementById('download-btn').style.display = "block"; 
+        
+        outputContainer.scrollIntoView({ behavior: 'smooth' });
+    }
 
-                recognition.onresult = (event) => {
-                    let combined = '';
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        combined += event.results[i][0].transcript;
-                    }
-                    document.getElementById('live-transcript').textContent = combined;
-                    processVoice(combined);
-                };
-
-                recognition.onerror = (e) => {
-                    console.error("STT Error:", e.error);
-                    if(e.error === 'not-allowed') document.getElementById('mic-error-msg').classList.remove('hidden');
-                    stopRecording();
-                };
-
-                recognition.onend = () => {
-                    if (isRecording) recognition.start(); // 處理靜默超時
-                };
-
-                // 3. 正式啟動
-                recognition.start();
-
-            } catch (err) {
-                console.error("Mic access denied:", err);
-                document.getElementById('mic-error-msg').classList.remove('hidden');
-            }
-        }
-
-        function stopRecording() {
-            isRecording = false;
-            if (recognition) {
-                recognition.onend = null;
-                recognition.stop();
-            }
-            updateUI(false);
-            if (matchedIndices.size > 0) generateReport();
-        }
-
-        function updateUI(active) {
-            const btn = document.getElementById('record-ctrl-btn');
-            const icon = document.getElementById('btn-icon');
-            const text = document.getElementById('btn-text');
-            const dot = document.getElementById('status-dot');
-
-            if (active) {
-                btn.className = "bg-red-500 text-white w-full md:w-auto px-10 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md recording-active";
-                icon.className = "fa-solid fa-square";
-                text.textContent = "結束評量";
-                dot.className = "w-2 h-2 rounded-full bg-red-500";
-            } else {
-                btn.className = "btn-gold w-full md:w-auto px-10 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-md";
-                icon.className = "fa-solid fa-microphone";
-                text.textContent = matchedIndices.size > 0 ? "重新測驗" : "開始語音辨識";
-                dot.className = "w-2 h-2 rounded-full bg-emerald-500";
-            }
-        }
-
-        function processVoice(input) {
-            const spoken = input.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/);
-            const targetClean = targetText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/);
-            targetClean.forEach((target, i) => {
-                if (spoken.includes(target)) {
-                    document.getElementById(`word-${i}`).className = "word-span word-matched";
-                    matchedIndices.add(i);
-                }
-            });
-        }
-
-        function generateReport() {
-            const accuracy = Math.round((matchedIndices.size / words.length) * 100);
-            document.getElementById('score-report').classList.remove('hidden');
-            animateValue('final-score', 0, accuracy, 1000, '%');
-            setTimeout(() => {
-                document.getElementById('fluency-val').textContent = Math.min(100, accuracy + 5) + '%';
-                document.getElementById('precision-val').textContent = accuracy + '%';
-                document.getElementById('progress-circle').setAttribute('stroke-dasharray', `${accuracy}, 100`);
-                const feedbackList = document.getElementById('feedback-list');
-                feedbackList.innerHTML = accuracy > 70 ? 
-                    "<li>語調穩定，單字清晰</li><li>嘗試增加連音的流暢度</li>" : 
-                    "<li>辨識率較低，建議更靠近麥克風</li><li>多練習 Suddenly 與 Unbearable 的發音</li>";
-            }, 500);
-        }
-
-        function animateValue(id, start, end, duration, suffix = '') {
-            const obj = document.getElementById(id);
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerText = Math.floor(progress * (end - start) + start) + suffix;
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        // --- 閱讀測驗資料 ---
-        const quizData = [
-            { 
-                q: "The author uses short fragments like 'One hundred meters. ... One hundred and fifty meters.' What is the primary purpose?", 
-                options: ["To save space.", "To create suspense and mimic the rhythm of the race.", "To show Derek was slow.", "To focus on distance only."], 
-                ans: 1 
-            },
-            { 
-                q: "What does the repetition of 'Somehow' emphasize in the text?", 
-                options: ["Physical technique.", "Doubt about Derek.", "The mysterious nature of determination.", "Derek being lost."], 
-                ans: 2 
-            },
-            { 
-                q: "What does 'Heart of a Champion' refer to?", 
-                options: ["Physical health.", "Winning a gold medal.", "Speed of recovery.", "Inner strength to finish despite pain."], 
-                ans: 3 
-            },
-            { 
-                q: "Derek's father joined him. What did this represent?", 
-                options: ["Disappointment.", "Unconditional support.", "Forcing him to stop.", "A rule violation."], 
-                ans: 1 
-            }
-        ];
-
-        const quizStack = document.getElementById('quiz-stack');
-        quizData.forEach((item, qIdx) => {
-            const div = document.createElement('div');
-            div.className = "quiz-item";
-            div.innerHTML = `
-                <div class="flex gap-3 items-start mb-4">
-                    <span class="bg-indigo-600 text-white font-bold px-2 py-1 rounded text-[10px] mt-1 shrink-0">Q${qIdx+1}</span>
-                    <p class="font-bold text-slate-800 text-base leading-snug">${item.q}</p>
-                </div>
-                <div class="grid grid-cols-1 gap-1 pl-9">
-                    ${item.options.map((opt, oIdx) => `
-                        <button onclick="checkAnswer(this, ${oIdx === item.ans})" class="quiz-option">
-                            <span class="inline-block w-6 text-slate-400 font-mono">${String.fromCharCode(65+oIdx)}.</span>
-                            ${opt}
-                        </button>
-                    `).join('')}
-                </div>
-            `;
-            quizStack.appendChild(div);
+    function downloadImage() {
+        const menuElement = document.getElementById('menu-output');
+        html2canvas(menuElement, { scale: 2 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'Our-In-Flight-Menu.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         });
+    }
+</script>
 
-        function checkAnswer(btn, isCorrect) {
-            const container = btn.parentElement;
-            container.querySelectorAll('button').forEach(b => {
-                b.disabled = true;
-                b.classList.add('opacity-40');
-            });
-            btn.classList.remove('opacity-40');
-            if (isCorrect) {
-                btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700', 'font-bold');
-            } else {
-                btn.classList.add('border-red-400', 'bg-red-50', 'text-red-700', 'font-bold');
-            }
-        }
-    </script>
 </body>
 </html>
