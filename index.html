@@ -1,273 +1,449 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>In-Flight Menu Builder</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; padding: 10px; margin: 0; }
-        .container { width: 100%; box-sizing: border-box; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #0056b3; font-size: 1.5em; margin-top: 5px; }
-        .role-section { background: #eef2f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .role-title { font-weight: bold; font-size: 1.1em; margin-bottom: 10px; color: #2c3e50; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
-        select, textarea, input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; font-family: inherit; box-sizing: border-box; font-size: 1em; }
-        textarea { height: 120px; resize: vertical; }
-        
-        .button-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-        .starter-btn { background: #0056b3; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 0.95em; text-align: left; }
-        .generate-btn { display: block; width: 100%; padding: 18px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 1.2em; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 6px rgba(40,167,69,0.3); }
-        .download-btn { display: none; width: 100%; padding: 15px; background: #17a2b8; color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        
-        .toolbar { margin-bottom: 10px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #ddd;}
-        canvas { border: 2px solid #bbb; background: #fff; cursor: crosshair; border-radius: 5px; width: 100%; aspect-ratio: 4/3; display: block; touch-action: none; box-sizing: border-box; }
-        .clear-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.9em; cursor: pointer;}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>期中考傳奇：複習大挑戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
-        #menu-output-container { margin-top: 30px; display: none; }
-        #menu-output { padding: 20px; border-radius: 12px; text-align: center; }
-        .theme-luxury { background: #1a1a1a; color: #f4d03f; font-family: 'Georgia', serif; border: 3px solid #d4af37; }
-        .theme-eco { background: #e8f5e9; color: #2e7d32; font-family: 'Arial', sans-serif; border: 3px solid #81c784; }
-        
-        .output-title { font-size: 1.8em; margin-bottom: 20px; border-bottom: 2px solid currentColor; padding-bottom: 10px; display: inline-block; }
-        .menu-content { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        #output-dish-name { margin: 0 0 10px 0; font-size: 1.4em; font-style: italic; }
-        #output-image { width: 100%; max-width: 400px; border-radius: 8px; background: white; border: 2px solid currentColor; }
-        .output-text { font-size: 1.05em; line-height: 1.5; text-align: left; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 8px; width: 100%; box-sizing: border-box; }
-        .output-features { display: flex; flex-direction: column; gap: 10px; font-style: italic; font-size: 0.9em; margin-top: 15px; padding-top: 15px; border-top: 1px dashed currentColor; }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #020617; color: white; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .option-btn { transition: all 0.2s; border: 2px solid #334155; }
+        .option-btn:hover:not(:disabled) { border-color: #6366f1; background: rgba(99, 102, 241, 0.1); }
+        .correct { background-color: #059669 !important; border-color: #10b981 !important; }
+        .wrong { background-color: #b91c1c !important; border-color: #ef4444 !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        .reading-text { font-family: 'Georgia', serif; line-height: 1.8; }
     </style>
 </head>
-<body onload="applyTemplate()">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-<div class="container">
-    <h1>✈️ In-Flight Menu Builder</h1>
+    <div id="app" class="w-full max-w-5xl"></div>
 
-    <div class="role-section">
-        <div class="role-title">🔬 The Scientist: Identify the Problem</div>
-        <select id="problem">
-            <option value="Dry Cabin Air">Dry Cabin Air (Low humidity)</option>
-            <option value="Blocked Senses">Blocked Senses (Stuffy noses)</option>
-            <option value="Engine Distraction">Engine Distraction (Constant noise)</option>
-        </select>
-    </div>
-
-    <div class="role-section">
-        <div class="role-title">🧑‍🍳 The Head Chef: Choose the Solution</div>
-        <select id="solution">
-            <option value="Umami Boost">Umami Boost (Tomatoes & mushrooms)</option>
-            <option value="Texture Control">Texture Control (Medium-rare prep)</option>
-            <option value="Sensory Clearing">Sensory Clearing (Nasal sprays)</option>
-        </select>
-    </div>
-
-    <div class="role-section">
-        <div class="role-title">📝 The Copy Editor: Draft Text</div>
-        <div class="button-group">
-            <button class="starter-btn" onclick="insertText('To combat the dulling effects of ')">Start: "To combat..."</button>
-            <button class="starter-btn" onclick="insertText('Given that the cabin unique environment compromises ')">Start: "Given that..."</button>
-            <button class="starter-btn" onclick="insertText('Our culinary team counteracts this phenomenon by ')">Solution: "Our team..."</button>
-        </div>
-        <textarea id="promo-text" placeholder="Combine the Scientist's and Chef's ideas here... (50-80 words)"></textarea>
-        <div id="word-count" style="font-size: 0.85em; text-align: right; color: #555;">Word Count: 0</div>
-    </div>
-
-    <div class="role-section">
-        <div class="role-title">🎨 The Art Director: Design & Draw</div>
-        <select id="theme" style="margin-bottom: 15px;">
-            <option value="theme-luxury">Menu Theme: Luxury First Class</option>
-            <option value="theme-eco">Menu Theme: Modern Eco</option>
-        </select>
-
-        <label>Name Your Signature Dish:</label>
-        <input type="text" id="dish-name" placeholder="e.g., High-Altitude Mushroom Steak">
-        
-        <label>Canvas Background Template:</label>
-        <select id="canvas-template" onchange="applyTemplate()">
-            <option value="blank">Blank White Canvas</option>
-            <option value="first-class">First Class Ceramic Plate</option>
-            <option value="eco-tray">Economy Meal Tray</option>
-        </select>
-
-        <label>Or Upload/Take a Photo to Draw Over:</label>
-        <input type="file" id="image-upload" accept="image/*" capture="environment">
-
-        <label style="margin-top: 10px;">Draw the Food:</label>
-        <div class="toolbar">
-            <div>
-                <input type="color" id="brush-color" value="#000000">
-                <input type="range" id="brush-size" min="1" max="20" value="4">
-            </div>
-            <button class="clear-btn" onclick="applyTemplate()">🗑️ Clear</button>
-        </div>
-        <canvas id="drawing-board" width="600" height="450"></canvas>
-    </div>
-
-    <button class="generate-btn" onclick="generateMenu()">✨ Generate Menu</button>
-
-    <div id="menu-output-container">
-        <div id="menu-output">
-            <div class="output-title">Sky-High Dining</div>
-            <div class="menu-content">
-                <h3 id="output-dish-name"></h3>
-                <img id="output-image" alt="Signature Dish">
-                <div class="output-text" id="output-promo"></div>
-            </div>
-            <div class="output-features">
-                <span id="output-prob-badge"></span>
-                <span id="output-sol-badge"></span>
-            </div>
-        </div>
-        <button id="download-btn" class="download-btn" onclick="downloadImage()">📸 Download Menu for Google Classroom</button>
-    </div>
-
-</div>
-
-<script>
-    document.getElementById('promo-text').addEventListener('input', function() {
-        let text = this.value.trim();
-        let words = text === "" ? 0 : text.split(/\s+/).length;
-        let counter = document.getElementById('word-count');
-        counter.textContent = "Word Count: " + words;
-        counter.style.color = (words < 50 || words > 80) ? "red" : "green";
-    });
-
-    function insertText(text) {
-        let textarea = document.getElementById('promo-text');
-        textarea.value += text;
-        textarea.focus();
-        textarea.dispatchEvent(new Event('input')); 
-    }
-
-    const canvas = document.getElementById('drawing-board');
-    const ctx = canvas.getContext('2d');
-    let isDrawing = false;
-
-    // Apply specific backgrounds
-    function applyTemplate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let template = document.getElementById('canvas-template').value;
-        
-        if (template === 'blank') {
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        } else if (template === 'first-class') {
-            ctx.fillStyle = "#2c3e50"; // Dark table
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.beginPath();
-            ctx.arc(canvas.width/2, canvas.height/2, canvas.height/2.2, 0, 2 * Math.PI);
-            ctx.fillStyle = "#f5f5f5"; // White plate
-            ctx.fill();
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = "#d4af37"; // Gold rim
-            ctx.stroke();
-            ctx.beginPath(); // reset path for drawing
-        } else if (template === 'eco-tray') {
-            ctx.fillStyle = "#bbdefb"; // Light blue tray table
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#eeeeee"; // Grey tray
-            let padding = 30;
-            ctx.fillRect(padding, padding, canvas.width - (padding*2), canvas.height - (padding*2));
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = "#9e9e9e";
-            ctx.strokeRect(padding, padding, canvas.width - (padding*2), canvas.height - (padding*2));
-            ctx.beginPath();
-        }
-    }
-
-    // Image Upload Handling
-    document.getElementById('image-upload').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                ctx.fillStyle = "white";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-                const x = (canvas.width / 2) - (img.width / 2) * scale;
-                const y = (canvas.height / 2) - (img.height / 2) * scale;
-                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-            }
-            img.src = event.target.result;
-        }
-        reader.readAsDataURL(file);
-    });
-
-    // Drawing mechanics
-    function getMousePos(e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        let clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        let clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        return {
-            x: (clientX - rect.left) * scaleX,
-            y: (clientY - rect.top) * scaleY
+    <script>
+        // ==========================================
+        // 你的專屬 Firebase 設定 (已直接寫入)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGiUF2PF27VK6-jn8c8FWOTAQ-taqTbPc",
+            authDomain: "mid-term-review-236ee.firebaseapp.com",
+            databaseURL: "https://mid-term-review-236ee-default-rtdb.firebaseio.com/",
+            projectId: "mid-term-review-236ee",
+            storageBucket: "mid-term-review-236ee.firebasestorage.app",
+            messagingSenderId: "371091170039",
+            appId: "1:371091170039:web:685e21b2e30d72036969f2"
         };
-    }
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-    function startPosition(e) {
-        isDrawing = true;
-        draw(e);
-    }
+        // ==========================================
+        // 題庫設計 (保留 L1/L2，重製 L3/L4)
+        // ==========================================
+        const LEVEL_DATA = [
+            // --- 保留原本的 Level 1 ---
+            {
+                level: 1, title: "Level 1: 單字迷霧森林", points: 100,
+                questions: [
+                    { q: "After winning the gold medal in 2024, the Taiwanese team enters the 2026 WBC with renewed _______ and support from fans.", options: ["confidence", "injury", "humidity", "pressure"], a: 0, exp: "confidence (信心)。" },
+                    { q: "Engineers worked for years to design the massive steel _______ that now spans the river.", options: ["announcement", "structure", "celebration", "flavor"], a: 1, exp: "structure (結構物)。" },
+                    { q: "The 1992 Olympics was Derek Redmond's moment to show the world his _______, but a sudden injury changed everything.", options: ["dedication", "distraction", "accuracy", "barrier"], a: 0, exp: "dedication (奉獻/投入)。" },
+                    { q: "Airlines often have to _______ the types of food they serve because dry air affects flavor.", options: ["promote", "restrict", "reserve", "achieve"], a: 1, exp: "restrict (限制)。" },
+                    { q: "Fukuoka is famous for its tonkotsu ramen, which is a major part of the city's cultural _______.", options: ["industry", "identity", "misery", "missile"], a: 1, exp: "identity (認同/特色)。" },
+                    { q: "Derek Redmond's father is remembered for his noble _______ after helping his son finish the race.", options: ["deeds", "leaks", "talents", "entries"], a: 0, exp: "deeds (行為/壯舉)。" },
+                    { q: "Most passengers are not _______ of the fact that their taste buds change during a flight.", options: ["excellent", "previous", "conscious", "humorous"], a: 2, exp: "conscious (意識到的)。" },
+                    { q: "The 2026 WBC will bring together 20 countries in a global _______ of baseball.", options: ["celebration", "accuracy", "barrier", "humidity"], a: 0, exp: "celebration (慶典)。" },
+                    { q: "Derek Redmond was _______ for success, having worked so hard after his previous injury.", options: ["hungry", "stubborn", "unbearable", "blocked"], a: 0, exp: "hungry (渴望的)。" },
+                    { q: "Modern scientists believe the legend of St. Patrick driving snakes away is not _______.", options: ["accurate", "sincere", "previous", "conscious"], a: 0, exp: "accurate (準確的)。" }
+                ]
+            },
+            // --- 保留原本的 Level 2 ---
+            {
+                level: 2, title: "Level 2: 文法海溝", points: 100,
+                questions: [
+                    { q: "Fukuoka is a welcoming city _______ visitors can enjoy a laid-back atmosphere.", options: ["which", "that", "where", "what"], a: 2, exp: "where 修飾地點。" },
+                    { q: "Many fans remember the moment _______ Shohei Ohtani struck out Mike Trout.", options: ["which", "when", "on that", "whom"], a: 1, exp: "when 修飾時間。" },
+                    { q: "Researchers have explained the reasons _______ airplane food tastes different.", options: ["where", "which", "how", "why"], a: 3, exp: "why 修飾原因。" },
+                    { q: "The shamrock, _______ is Ireland's flower, was used to explain the Holy Trinity.", options: ["which", "where", "that", "when"], a: 0, exp: "which 引導非限定子句。" },
+                    { q: "Your tongue does not function _______ it normally does on the ground.", options: ["as same as", "as same that", "the same as", "the same that"], a: 2, exp: "the same as (與...相同)。" },
+                    { q: "_______ having missed the previous Olympics, Derek arrived with a heart set on winning.", options: ["Although", "Despite", "In spite", "Even though"], a: 1, exp: "Despite 後接 V-ing。" },
+                    { q: "_______ the championship title on the line, the moment was incredibly tense.", options: ["By", "For", "With", "As"], a: 2, exp: "With + O + OC。" },
+                    { q: "The cabin becomes _______ dry _______ passengers lose their appetite.", options: ["too...to", "enough...to", "so...that", "such...that"], a: 2, exp: "so...that (如此...以至於)。" },
+                    { q: "St. Patrick returned to Ireland _______ he could teach people about Christianity.", options: ["in order to", "so as to", "so that", "with a view to"], a: 2, exp: "so that 引導目的子句。" },
+                    { q: "The crowd watched Derek Redmond _______ off at the start of the race.", options: ["taking", "taken", "to take", "was taken"], a: 0, exp: "watch + O + V-ing。" }
+                ]
+            },
+            // --- 全新 Level 3：文意選填 (三個篇章) ---
+            {
+                level: 3, title: "Level 3: 知識圖書館 (文意選填)", points: 150,
+                questions: [
+                    // 篇章 1: St. Patrick's Day
+                    { 
+                        article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) traditional &nbsp; (B) captured &nbsp; (C) decorating &nbsp; (D) associated</div>Saint Patrick was not originally Irish. He was born in Britain and was <b>(1)_______</b> by pirates. After escaping, he returned to teach Christianity. Today, the color green is closely <b>(2)_______</b> with this holiday. You can see shamrocks <b>(3)_______</b> everything from cookies to clothing. People also gather to enjoy <b>(4)_______</b> dishes like Irish soda bread.`, 
+                        q: "請問空格 (1) 應填入哪一個字？", options: ["traditional", "captured", "decorating", "associated"], a: 1, exp: "被海盜「俘虜 (captured)」。" 
+                    },
+                    { article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) traditional &nbsp; (B) captured &nbsp; (C) decorating &nbsp; (D) associated</div>Saint Patrick was not originally Irish. He was born in Britain and was <b>(1)_______</b> by pirates. After escaping, he returned to teach Christianity. Today, the color green is closely <b>(2)_______</b> with this holiday. You can see shamrocks <b>(3)_______</b> everything from cookies to clothing. People also gather to enjoy <b>(4)_______</b> dishes like Irish soda bread.`, q: "請問空格 (2) 應填入哪一個字？", options: ["traditional", "captured", "decorating", "associated"], a: 3, exp: "be associated with... (與...有關聯)。" },
+                    { article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) traditional &nbsp; (B) captured &nbsp; (C) decorating &nbsp; (D) associated</div>Saint Patrick was not originally Irish. He was born in Britain and was <b>(1)_______</b> by pirates. After escaping, he returned to teach Christianity. Today, the color green is closely <b>(2)_______</b> with this holiday. You can see shamrocks <b>(3)_______</b> everything from cookies to clothing. People also gather to enjoy <b>(4)_______</b> dishes like Irish soda bread.`, q: "請問空格 (3) 應填入哪一個字？", options: ["traditional", "captured", "decorating", "associated"], a: 2, exp: "decorating (裝飾)，修飾前面的 shamrocks。" },
+                    { article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) traditional &nbsp; (B) captured &nbsp; (C) decorating &nbsp; (D) associated</div>Saint Patrick was not originally Irish. He was born in Britain and was <b>(1)_______</b> by pirates. After escaping, he returned to teach Christianity. Today, the color green is closely <b>(2)_______</b> with this holiday. You can see shamrocks <b>(3)_______</b> everything from cookies to clothing. People also gather to enjoy <b>(4)_______</b> dishes like Irish soda bread.`, q: "請問空格 (4) 應填入哪一個字？", options: ["traditional", "captured", "decorating", "associated"], a: 0, exp: "traditional dishes (傳統美食)。" },
 
-    function endPosition() {
-        isDrawing = false;
-        ctx.beginPath();
-    }
+                    // 篇章 2: Fukuoka
+                    { 
+                        article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) leisurely &nbsp; (B) dedicated &nbsp; (C) overlooked &nbsp; (D) atmosphere</div>Fukuoka is often <b>(5)_______</b> in favor of larger cities like Tokyo, but it has a wonderful, laid-back <b>(6)_______</b>. Visitors can enjoy many unique attractions. For example, Dazaifu Tenmangū is a beautiful shrine <b>(7)_______</b> to the god of learning. After visiting the shrine, travelers can take a <b>(8)_______</b> walk in its peaceful plum tree garden.`, 
+                        q: "請問空格 (5) 應填入哪一個字？", options: ["leisurely", "dedicated", "overlooked", "atmosphere"], a: 2, exp: "overlooked (被忽略)。" 
+                    },
+                    { article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) leisurely &nbsp; (B) dedicated &nbsp; (C) overlooked &nbsp; (D) atmosphere</div>Fukuoka is often <b>(5)_______</b> in favor of larger cities like Tokyo, but it has a wonderful, laid-back <b>(6)_______</b>. Visitors can enjoy many unique attractions. For example, Dazaifu Tenmangū is a beautiful shrine <b>(7)_______</b> to the god of learning. After visiting the shrine, travelers can take a <b>(8)_______</b> walk in its peaceful plum tree garden.`, q: "請問空格 (6) 應填入哪一個字？", options: ["leisurely", "dedicated", "overlooked", "atmosphere"], a: 3, exp: "laid-back atmosphere (悠閒的氛圍)。" },
+                    { article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) leisurely &nbsp; (B) dedicated &nbsp; (C) overlooked &nbsp; (D) atmosphere</div>Fukuoka is often <b>(5)_______</b> in favor of larger cities like Tokyo, but it has a wonderful, laid-back <b>(6)_______</b>. Visitors can enjoy many unique attractions. For example, Dazaifu Tenmangū is a beautiful shrine <b>(7)_______</b> to the god of learning. After visiting the shrine, travelers can take a <b>(8)_______</b> walk in its peaceful plum tree garden.`, q: "請問空格 (7) 應填入哪一個字？", options: ["leisurely", "dedicated", "overlooked", "atmosphere"], a: 1, exp: "dedicated to... (奉獻給.../祭祀...)。" },
 
-    function draw(e) {
-        if (!isDrawing) return;
-        e.preventDefault(); 
-        
-        ctx.lineWidth = document.getElementById('brush-size').value;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = document.getElementById('brush-color').value;
+                    // 篇章 3: Airplane Food
+                    { 
+                        article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) conditions &nbsp; (B) sensitive &nbsp; (C) altitude &nbsp; (D) distinguish</div>When flying at a high <b>(9)_______</b>, your body undergoes changes. Because of low humidity, your tongue is not as <b>(10)_______</b> to flavors. Your nose also gets blocked, making it hard to <b>(11)_______</b> between different tastes. Furthermore, the loud and noisy cabin <b>(12)_______</b> can distract you, reducing your overall enjoyment of the meal.`, 
+                        q: "請問空格 (9) 應填入哪一個字？", options: ["conditions", "sensitive", "altitude", "distinguish"], a: 2, exp: "altitude (海拔/高度)。" 
+                    },
+                    { article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) conditions &nbsp; (B) sensitive &nbsp; (C) altitude &nbsp; (D) distinguish</div>When flying at a high <b>(9)_______</b>, your body undergoes changes. Because of low humidity, your tongue is not as <b>(10)_______</b> to flavors. Your nose also gets blocked, making it hard to <b>(11)_______</b> between different tastes. Furthermore, the loud and noisy cabin <b>(12)_______</b> can distract you, reducing your overall enjoyment of the meal.`, q: "請問空格 (10) 應填入哪一個字？", options: ["conditions", "sensitive", "altitude", "distinguish"], a: 1, exp: "sensitive to... (對...敏感)。" },
+                    { article: `<div class="bg-indigo-900/50 p-4 rounded-xl mb-4 text-yellow-300 font-bold border border-indigo-500">【Word Bank】<br>(A) conditions &nbsp; (B) sensitive &nbsp; (C) altitude &nbsp; (D) distinguish</div>When flying at a high <b>(9)_______</b>, your body undergoes changes. Because of low humidity, your tongue is not as <b>(10)_______</b> to flavors. Your nose also gets blocked, making it hard to <b>(11)_______</b> between different tastes. Furthermore, the loud and noisy cabin <b>(12)_______</b> can distract you, reducing your overall enjoyment of the meal.`, q: "請問空格 (11) 應填入哪一個字？", options: ["conditions", "sensitive", "altitude", "distinguish"], a: 3, exp: "distinguish between (分辨/區分)。" }
+                ]
+            },
+            // --- 全新 Level 4：素養長篇閱讀 (非死背課文) ---
+            {
+                level: 4, title: "Level 4: 終極挑戰 (素養閱讀理解)", points: 250,
+                article: `When we think of a "champion" in sports, we usually imagine flawless performances and gold medals. A perfect example is the 2023 World Baseball Classic (WBC) final, where Japan's Shohei Ohtani struck out his teammate, Mike Trout. With the championship title on the line, Ohtani’s pitch secured Japan's victory. It was a breathtaking moment that perfectly represented the peak of athletic execution and competitive rivalry.<br><br>However, sports history teaches us that the heart of a champion is not solely defined by winning. Sometimes, the most inspiring moments emerge from devastating defeats. Take Derek Redmond at the 1992 Barcelona Olympics. Redmond had trained for years, only to have his hamstring snap completely halfway through the 400-meter race. His dream of a medal shattered instantly. Yet, instead of accepting medical help and leaving on a stretcher, Redmond pushed the officials away. Supported by his father, who had rushed onto the track, he painfully hopped toward the finish line in tears.<br><br>While Ohtani’s strikeout is globally celebrated as a triumph of skill, Redmond’s agonizing finish is revered as a triumph of the human spirit. Ohtani showed us how to win with greatness, but Redmond showed us how to fail with absolute dignity. Both events, though entirely different in their outcomes, evoke a profound sense of inspiration. They remind us that true sportsmanship transcends the podium; it is found in the unwavering resolve to complete the race, no matter the circumstances.`,
+                questions: [
+                    { q: "【主旨題】What is the main purpose of this passage?", options: ["To argue that baseball is a more competitive sport than track and field.", "To explain why Derek Redmond failed to win a gold medal in 1992.", "To show that true sportsmanship is about perseverance, not just winning.", "To compare the physical training of Shohei Ohtani and Derek Redmond."], a: 2, exp: "文章主旨在探討「真正的運動家精神」在於堅持到底，而不僅僅是贏得獎牌。" },
+                    { q: "【細節對比題】According to the passage, how does Ohtani’s 2023 victory differ from Redmond’s 1992 race?", options: ["Ohtani showed peak athletic skill, while Redmond showed the courage to face failure.", "Ohtani received help from his father, while Redmond finished entirely alone.", "Ohtani lost his final game, while Redmond eventually won a gold medal.", "Ohtani was seriously injured during the game, but Redmond was not."], a: 0, exp: "Ohtani 展現了頂尖技巧(triumph of skill)，而 Redmond 展現了面對失敗的勇氣(triumph of the human spirit)。" },
+                    { q: "【單字推論題】In the second paragraph, the word \"shattered\" is closest in meaning to...", options: ["completely destroyed", "suddenly improved", "carefully planned", "highly rewarded"], a: 0, exp: "shattered 在文中指夢想「破碎/徹底毀滅 (completely destroyed)」。" },
+                    { q: "【作者語氣題】What is the author's attitude toward athletes who do not win but refuse to give up?", options: ["Critical and disappointed.", "Deeply respectful and admiring.", "Confused and questioning.", "Neutral and uncaring."], a: 1, exp: "作者用 \"triumph of the human spirit\" (人類精神的勝利) 來形容，顯示出深深的「敬意與欽佩 (respectful and admiring)」。" }
+                ]
+            }
+        ];
 
-        const pos = getMousePos(e);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
-    }
+        let state = {
+            view: 'start', char: null, lvlIdx: 0, qIdx: 0, 
+            hp: 5, score: 0, unlocked: [0], 
+            timer: 30, timerId: null, 
+            owlSkillUsed: false, showExp: false, lastIdx: null, lastCorrect: false
+        };
 
-    canvas.addEventListener('mousedown', startPosition);
-    canvas.addEventListener('mouseup', endPosition);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseout', endPosition);
-    canvas.addEventListener('touchstart', startPosition, { passive: false });
-    canvas.addEventListener('touchend', endPosition);
-    canvas.addEventListener('touchmove', draw, { passive: false });
+        const app = document.getElementById('app');
 
-    // Output Generation
-    function generateMenu() {
-        document.getElementById('output-image').src = canvas.toDataURL("image/png");
-        document.getElementById('output-dish-name').innerText = document.getElementById('dish-name').value || "Chef's Special";
-        document.getElementById('output-promo').innerText = document.getElementById('promo-text').value;
-        document.getElementById('output-prob-badge').innerText = "🔬 Tackling: " + document.getElementById('problem').options[document.getElementById('problem').selectedIndex].text;
-        document.getElementById('output-sol-badge').innerText = "🧑‍🍳 Featuring: " + document.getElementById('solution').options[document.getElementById('solution').selectedIndex].text;
+        // --- 核心邏輯 ---
+        function selectChar(id) {
+            state.char = id;
+            state.view = 'map';
+            render();
+        }
 
-        let outputContainer = document.getElementById('menu-output-container');
-        let outputDiv = document.getElementById('menu-output');
-        
-        outputDiv.className = document.getElementById('theme').value;
-        outputContainer.style.display = "block";
-        document.getElementById('download-btn').style.display = "block"; 
-        
-        outputContainer.scrollIntoView({ behavior: 'smooth' });
-    }
+        function startLevel(idx) {
+            state.lvlIdx = idx;
+            state.qIdx = 0;
+            state.view = 'playing';
+            startQuestion();
+        }
 
-    function downloadImage() {
-        const menuElement = document.getElementById('menu-output');
-        html2canvas(menuElement, { scale: 2 }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = 'Our-In-Flight-Menu.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        });
-    }
-</script>
+        function startQuestion() {
+            state.showExp = false;
+            let baseTime = 30;
+            if (state.char === 'fox' && state.lvlIdx >= 2) baseTime = 60; // 狐狸技能
+            state.timer = baseTime;
+            
+            clearInterval(state.timerId);
+            state.timerId = setInterval(() => {
+                state.timer--;
+                if(state.timer <= 0) handleAnswer(-1);
+                render();
+            }, 1000);
+            render();
+        }
 
+        function handleAnswer(idx) {
+            clearInterval(state.timerId);
+            const level = LEVEL_DATA[state.lvlIdx];
+            const q = level.questions[state.qIdx];
+            state.lastIdx = idx;
+            state.lastCorrect = (idx === q.a);
+            
+            if (state.lastCorrect) {
+                state.score += level.points;
+            } else {
+                let damage = 1;
+                if(state.char === 'lion' && state.lvlIdx === 0) damage = 0.5; // 獅子技能
+                state.hp -= damage;
+            }
+            state.showExp = true;
+            render();
+        }
+
+        function nextStep() {
+            state.showExp = false;
+            if (state.hp <= 0) {
+                state.view = 'gameover';
+            } else if (state.qIdx + 1 < LEVEL_DATA[state.lvlIdx].questions.length) {
+                state.qIdx++;
+                startQuestion();
+            } else {
+                const nextLvl = state.lvlIdx + 1;
+                if (nextLvl < LEVEL_DATA.length) {
+                    if(!state.unlocked.includes(nextLvl)) state.unlocked.push(nextLvl);
+                    state.view = 'map';
+                } else {
+                    state.view = 'won';
+                }
+            }
+            render();
+        }
+
+        // --- 渲染函式 ---
+        function render() {
+            app.innerHTML = '';
+            if (state.view === 'start') renderStart();
+            else if (state.view === 'char-select') renderCharSelect();
+            else if (state.view === 'map') renderMap();
+            else if (state.view === 'playing') renderPlaying();
+            else if (state.view === 'gameover') renderGameOver();
+            else if (state.view === 'won') renderWon();
+            else if (state.view === 'leaderboard') renderLeaderboardView();
+        }
+
+        // 🟢 首頁新增「英雄排行榜」按鈕
+        function renderStart() {
+            app.innerHTML = `
+                <div class="text-center py-20 animate-fade-in">
+                    <h1 class="text-6xl md:text-8xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">MIDTERM LEGEND</h1>
+                    <p class="text-slate-400 text-xl mb-12 italic">期中考複習</p>
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-6">
+                        <button onclick="state.view='char-select'; render();" class="px-16 py-6 bg-indigo-600 hover:bg-indigo-500 rounded-full font-black text-2xl shadow-lg transition transform hover:scale-105">開始挑戰</button>
+                        <button onclick="showLeaderboard()" class="px-10 py-6 bg-slate-800 hover:bg-slate-700 rounded-full font-bold text-xl shadow-lg transition border border-slate-700 text-yellow-400">🏆 英雄排行榜</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCharSelect() {
+            const chars = [
+                { id: 'lion', icon: '🦁', name: '勇敢獅', desc: '單字直覺：L1 答錯扣血減半' },
+                { id: 'owl', icon: '🦉', name: '智慧梟', desc: '語法之眼：L2 隨機提示正確方向' },
+                { id: 'fox', icon: '🦊', name: '機智狐', desc: '閱讀掃描：L3/L4 答題時間加倍' }
+            ];
+            app.innerHTML = `
+                <div class="space-y-12">
+                    <h2 class="text-4xl font-bold text-center">選擇你的守護靈</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        ${chars.map(c => `
+                            <button onclick="selectChar('${c.id}')" class="glass-card p-8 rounded-[2.5rem] hover:border-indigo-500 transition group text-center">
+                                <div class="text-7xl mb-6 group-hover:scale-110 transition-transform">${c.icon}</div>
+                                <div class="text-2xl font-black mb-2">${c.name}</div>
+                                <div class="text-sm text-slate-400">${c.desc}</div>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMap() {
+            const nodes = ["🌲 Level 1: 單字迷霧", "🌊 Level 2: 文法海溝", "🏰 Level 3: 知識圖書館", "⚡ Level 4: 終極挑戰"];
+            app.innerHTML = `
+                <div class="flex flex-col items-center space-y-8">
+                    <div class="w-full flex justify-between glass-card p-6 rounded-3xl">
+                        <div class="flex items-center gap-4 text-xl">
+                            <span>${getCharIcon()}</span>
+                            <span>HP: ${renderHearts()}</span>
+                        </div>
+                        <div class="text-2xl font-black text-yellow-400">SCORE: ${state.score}</div>
+                    </div>
+                    <div class="grid gap-4 w-full max-w-md">
+                        ${nodes.map((n, i) => {
+                            const unlocked = state.unlocked.includes(i);
+                            return `
+                                <button onclick="${unlocked ? `startLevel(${i})` : ''}" 
+                                    class="p-6 rounded-2xl border-2 font-bold text-xl flex justify-between items-center transition ${unlocked ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-800 text-slate-600 opacity-50'}">
+                                    ${n} ${unlocked ? '<span>進入 →</span>' : '🔒'}
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 🟢 稍微調整 renderPlaying 以支援 L3 各題不同的閱讀文本
+        function renderPlaying() {
+            const level = LEVEL_DATA[state.lvlIdx];
+            const q = level.questions[state.qIdx];
+            
+            // 判斷是否需要顯示左側文章區 (L3 題目自帶 article，或 L4 整個 level 有 article)
+            const readingText = q.article || level.article;
+            
+            app.innerHTML = `
+                <div class="h-screen md:h-auto flex flex-col space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div class="text-indigo-400 font-bold">${level.title} (${state.qIdx + 1}/${level.questions.length})</div>
+                        <div class="text-2xl font-mono ${state.timer < 10 ? 'text-red-500 animate-pulse' : ''}">${state.timer}s</div>
+                        <div class="hidden md:block">${renderHearts()}</div>
+                    </div>
+
+                    <div class="glass-card rounded-3xl overflow-hidden flex flex-col md:flex-row flex-1 min-h-0">
+                        ${readingText ? `
+                            <div class="md:w-1/2 p-6 md:p-10 bg-slate-900/50 border-r border-slate-800 overflow-y-auto custom-scrollbar">
+                                <div class="text-xs text-indigo-400 uppercase font-black mb-4">Reading Material</div>
+                                <div class="reading-text text-lg text-slate-300 leading-relaxed">
+                                    ${readingText}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="flex-1 p-6 md:p-10 flex flex-col justify-center overflow-y-auto">
+                            <h3 class="text-xl md:text-2xl font-bold mb-8">${q.q}</h3>
+                            <div class="grid gap-3">
+                                ${q.options.map((opt, i) => `
+                                    <button onclick="handleAnswer(${i})" ${state.showExp ? 'disabled' : ''} 
+                                        class="option-btn w-full p-4 text-left rounded-xl font-bold ${getBtnClass(i)}">
+                                        ${String.fromCharCode(65+i)}. ${opt}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    ${state.showExp ? `
+                        <div class="fixed inset-0 bg-slate-950/95 flex items-center justify-center p-6 z-50">
+                            <div class="max-w-md w-full glass-card p-8 rounded-3xl text-center space-y-6">
+                                <div class="text-6xl">${state.lastCorrect ? '✅' : '❌'}</div>
+                                <h3 class="text-2xl font-bold">${state.lastCorrect ? 'Correct!' : 'Wrong...'}</h3>
+                                ${q.exp ? `<p class="text-slate-300 italic">「${q.exp}」</p>` : ''}
+                                <button onclick="nextStep()" class="w-full py-4 bg-indigo-600 rounded-xl font-bold text-lg">Next</button>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function getBtnClass(i) {
+            if (!state.showExp) return '';
+            const q = LEVEL_DATA[state.lvlIdx].questions[state.qIdx];
+            if (i === q.a) return 'correct';
+            if (i === state.lastIdx) return 'wrong';
+            return 'opacity-30';
+        }
+
+        function renderHearts() {
+            let h = '';
+            for(let i=0; i<5; i++) {
+                h += `<i class="fas fa-heart ${i < state.hp ? 'text-red-500' : 'text-slate-800'} mr-1"></i>`;
+            }
+            return h;
+        }
+
+        function getCharIcon() {
+            const icons = { lion: '🦁', owl: '🦉', fox: '🦊' };
+            return icons[state.char] || '';
+        }
+
+        function renderGameOver() {
+            app.innerHTML = `<div class="text-center py-20">
+                <div class="text-9xl mb-8">💀</div>
+                <h2 class="text-5xl font-black mb-8">任務失敗</h2>
+                <button onclick="location.reload()" class="px-12 py-4 bg-white text-slate-900 rounded-full font-bold">再試一次</button>
+            </div>`;
+        }
+
+        function renderWon() {
+            app.innerHTML = `<div class="text-center py-20 space-y-8">
+                <div class="text-9xl animate-bounce">👑</div>
+                <h2 class="text-6xl font-black">傳奇誕生！</h2>
+                <div class="text-3xl text-indigo-400 font-bold">總得分：${state.score}</div>
+                <div class="glass-card p-8 rounded-3xl max-w-sm mx-auto">
+                    <p class="mb-4 text-slate-400 italic">記錄你的成就</p>
+                    <input type="text" id="pName" class="w-full p-3 bg-slate-800 rounded-xl mb-4 text-center border border-slate-700" placeholder="輸入你的大名">
+                    <button onclick="uploadScore()" class="w-full py-3 bg-indigo-600 rounded-xl font-bold hover:bg-indigo-500 transition shadow-lg shadow-indigo-500/30">送出成績</button>
+                </div>
+                <button onclick="location.reload()" class="text-slate-500 underline mt-10">回到首頁</button>
+            </div>`;
+        }
+
+        // ==========================================
+        // Firebase 排行榜系統
+        // ==========================================
+        function uploadScore() {
+            const playerName = document.getElementById('pName').value || "無名英雄";
+            database.ref('scores').push({
+                name: playerName,
+                score: state.score,
+                date: new Date().toISOString()
+            }).then(() => {
+                alert("成績送出成功！來看看你的排名吧！");
+                showLeaderboard(); // 送出後自動前往排行榜
+            }).catch((error) => {
+                console.error("上傳失敗：", error);
+                alert("成績送出失敗，請檢查網路！");
+            });
+        }
+
+        function showLeaderboard() {
+            state.view = 'leaderboard';
+            render();
+            
+            // 抓取分數並由大到小排序
+            database.ref('scores').orderByChild('score').limitToLast(10).once('value')
+            .then((snapshot) => {
+                let scores = [];
+                snapshot.forEach((child) => { scores.push(child.val()); });
+                scores.reverse(); // 反轉讓最高分在最上面
+                
+                const boardDiv = document.getElementById('leaderboard-content');
+                if (scores.length === 0) {
+                    boardDiv.innerHTML = `<div class="text-slate-400 text-center py-10 text-xl">目前還沒有人挑戰，快來搶下首殺！</div>`;
+                    return;
+                }
+
+                boardDiv.innerHTML = scores.map((s, index) => {
+                    let rankClass = "text-slate-500";
+                    let bgClass = "bg-slate-800/50";
+                    if (index === 0) { rankClass = "text-yellow-400 text-3xl"; bgClass = "bg-yellow-500/20 border border-yellow-500/50"; }
+                    else if (index === 1) { rankClass = "text-slate-300 text-2xl"; bgClass = "bg-slate-300/10"; }
+                    else if (index === 2) { rankClass = "text-amber-600 text-2xl"; bgClass = "bg-amber-600/10"; }
+
+                    return `
+                        <div class="flex items-center p-5 mb-3 rounded-2xl ${bgClass} transition hover:scale-[1.02]">
+                            <div class="flex items-center gap-4 w-full">
+                                <span class="font-black w-10 text-center ${rankClass}">#${index + 1}</span>
+                                <span class="text-2xl font-bold">
+                                    ${s.name} 
+                                    <span class="text-slate-500 mx-2">-</span> 
+                                    <span class="text-indigo-400 font-black">${s.score}</span> 
+                                    <span class="text-sm text-slate-500 ml-1">pts</span>
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            })
+            .catch((error) => {
+                document.getElementById('leaderboard-content').innerHTML = `<div class="text-red-500 text-center">讀取失敗，請檢查網路連線。</div>`;
+            });
+        }
+
+        function renderLeaderboardView() {
+            app.innerHTML = `
+                <div class="max-w-2xl mx-auto py-10 w-full px-4 animate-fade-in">
+                    <h2 class="text-5xl md:text-6xl font-black mb-10 text-center text-yellow-400 drop-shadow-lg">🏆 英雄排行榜</h2>
+                    <div id="leaderboard-content" class="glass-card p-4 md:p-8 rounded-[2rem] shadow-2xl min-h-[300px] flex items-center justify-center">
+                        <div class="text-2xl animate-pulse text-slate-400">正在召喚英雄資料...</div>
+                    </div>
+                    <div class="text-center mt-12">
+                        <button onclick="location.reload()" class="px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full font-bold text-xl shadow-lg transition">返回首頁</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        render();
+    </script>
 </body>
 </html>
